@@ -7,617 +7,292 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
             user-select: none;
             -webkit-user-select: none;
-            overflow-x: hidden;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        .judge-pin-drag {
+        .judge-zone {
+            transition: all 0.15s ease;
+        }
+        .judge-zone:hover {
+            transform: scale(1.015);
+            z-index: 10;
+        }
+
+        .judge-slot {
+            transition: all 0.15s ease;
+            min-height: 52px;
+        }
+        .judge-slot:hover {
+            filter: brightness(1.06);
+        }
+
+        .judge-chip {
             cursor: grab;
-            transition: filter 0.2s ease;
+            touch-action: none;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
         }
-
-        .judge-pin-drag:active {
+        .judge-chip:active {
             cursor: grabbing;
+            transform: scale(1.04);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .judge-chip.dragging {
+            opacity: 0.45;
+        }
+        .drop-target-active {
+            outline: 2px dashed #38bdf8;
+            outline-offset: 2px;
+            background-color: rgba(56, 189, 248, 0.12) !important;
         }
 
-        .judge-pin-drag:hover {
-            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.9));
+        .track-surface {
+            background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .toast-notification {
+            animation: slideUp 0.25s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(16px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-
-        .tab-panel-btn {
-            transition: all 0.2s ease;
-        }
-
-        .tab-panel-btn.active {
-            background-color: #2563eb;
-            color: #ffffff;
-            border-color: #60a5fa;
-        }
-
-        /* Day mode (light palette) overrides */
+        /* =========================================================
+           MODO DÍA (ALTA LEGIBILIDAD AL SOL / EN PISTA)
+           ========================================================= */
         body.day-mode {
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
             color: #0f172a;
         }
-
-        body.day-mode .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(226, 232, 240, 0.8);
-        }
-
-        body.day-mode .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-        }
-
-        body.day-mode .tab-panel-btn:not(.active) {
-            color: #475569;
-        }
-
         body.day-mode .dm-header {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.96);
             border-color: #cbd5e1;
         }
-
         body.day-mode .dm-title {
-            color: #0f172a;
+            color: #0f172a !important;
         }
-
-        body.day-mode .dm-subtitle {
-            color: #475569;
-        }
-
-        body.day-mode .dm-surface {
-            background-color: #ffffff;
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-
-        body.day-mode .dm-tabbar {
-            background-color: #e2e8f0;
-            border-color: #cbd5e1;
-        }
-
-        body.day-mode .dm-tab-inactive {
-            background-color: #ffffff;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
-
-        body.day-mode .dm-tab-inactive:hover {
-            background-color: #f8fafc;
-        }
-
-        body.day-mode .dm-btn-secondary {
-            background-color: #f1f5f9;
-            color: #1e293b;
-            border-color: #cbd5e1;
-        }
-
-        body.day-mode .dm-btn-secondary:hover {
-            background-color: #e2e8f0;
-        }
-
-        body.day-mode .dm-pill {
-            background-color: #f1f5f9;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
-
-        body.day-mode .dm-divider {
-            border-color: #e2e8f0;
-        }
-
+        body.day-mode .dm-subtitle,
         body.day-mode .dm-muted {
-            color: #475569;
+            color: #475569 !important;
         }
-
-        body.day-mode .dm-card-assigned {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
+        body.day-mode .dm-card {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
         }
-
-        body.day-mode .dm-card-unassigned {
-            background-color: #fffbeb;
-            border-color: #fcd34d;
+        body.day-mode .dm-panel {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
         }
-
-        body.day-mode .dm-card-title {
-            color: #0f172a;
-        }
-
-        body.day-mode .dm-footer {
-            background-color: #ffffff;
-            border-color: #cbd5e1;
-        }
-
-        body.day-mode .dm-modal {
-            background-color: #ffffff;
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-
         body.day-mode .dm-input {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-            color: #0f172a;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #94a3b8 !important;
+        }
+        body.day-mode .dm-input::placeholder {
+            color: #64748b !important;
+        }
+        body.day-mode .dm-btn-secondary {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.day-mode .dm-btn-secondary:hover {
+            background-color: #cbd5e1 !important;
+        }
+        body.day-mode .dm-modal {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        body.day-mode .dm-divider {
+            border-color: #e2e8f0 !important;
         }
 
-        /* Light/white SVG track & pending box in Day Mode while preserving sky-blue track surface */
+        /* Patinódromo en Modo Día */
+        body.day-mode .track-surface {
+            background: #e2e8f0 !important;
+        }
         body.day-mode .dm-track-frame {
-            background-color: #ffffff;
-            border-color: #cbd5e1;
+            background-color: #ffffff !important;
+            border-color: #64748b !important;
+        }
+        body.day-mode .dm-track-curva {
+            background-color: #f1f5f9 !important;
+            border-color: #64748b !important;
+        }
+        body.day-mode .dm-track-recta {
+            background-color: #f8fafc !important;
+            border-color: #64748b !important;
+        }
+        body.day-mode .dm-track-cuerda {
+            background-color: #e2e8f0 !important;
+            border-color: #64748b !important;
+        }
+        body.day-mode .dm-track-label {
+            color: #1e293b !important;
+        }
+        body.day-mode .dm-track-sublabel {
+            color: #475569 !important;
+        }
+        body.day-mode .dm-track-meta-divider {
+            border-color: #94a3b8 !important;
+        }
+        body.day-mode .dm-track-meta-badge {
+            background-color: rgba(255, 255, 255, 0.92) !important;
+            color: #0f172a !important;
+            border-color: #94a3b8 !important;
         }
 
-        body.day-mode #track-svg rect[fill="url(#bgGradient)"] {
-            fill: #ffffff;
+        /* Chips de jueces en Modo Día (alto contraste sobre fondo claro) */
+        body.day-mode .judge-chip.chip-amber {
+            background-color: #fef3c7 !important;
+            border-color: #d97706 !important;
+            color: #78350f !important;
+        }
+        body.day-mode .judge-chip.chip-amber .chip-role {
+            color: #92400e !important;
+        }
+        body.day-mode .judge-chip.chip-emerald {
+            background-color: #d1fae5 !important;
+            border-color: #059669 !important;
+            color: #064e3b !important;
+        }
+        body.day-mode .judge-chip.chip-emerald .chip-role {
+            color: #065f46 !important;
+        }
+        body.day-mode .judge-chip.chip-purple {
+            background-color: #ede9fe !important;
+            border-color: #7c3aed !important;
+            color: #4c1d95 !important;
+        }
+        body.day-mode .judge-chip.chip-purple .chip-role {
+            color: #5b21b6 !important;
+        }
+        body.day-mode .judge-chip.chip-sky {
+            background-color: #e0f2fe !important;
+            border-color: #0284c7 !important;
+            color: #0c4a6e !important;
+        }
+        body.day-mode .judge-chip.chip-sky .chip-role {
+            color: #075985 !important;
         }
 
-        body.day-mode #track-svg path[stroke="#1e293b"] {
-            stroke: #e2e8f0;
-        }
-
-        body.day-mode #track-svg path[stroke="#334155"] {
-            stroke: #94a3b8;
-        }
-
-        body.day-mode #track-svg rect[fill="#020617"] {
-            fill: #f8fafc;
-            stroke: #cbd5e1;
-        }
-
-        body.day-mode #track-svg text[fill="#64748b"] {
-            fill: #334155;
-        }
-
-        body.day-mode #track-svg text[fill="#475569"] {
-            fill: #475569;
-        }
-
-        body.day-mode #track-svg rect[fill="#0f172a"] {
-            fill: #ffffff;
-        }
-
-        body.day-mode #track-svg rect[fill="#0f172a"] + text[fill="#ffffff"] {
-            fill: #0f172a;
-        }
-
-        /* Single-page A4 print styling with compact left-aligned table and race subtitle below title */
+        /* =========================================================
+           IMPRESIÓN / PDF LIMPIO Y LEGIBLE (A4 / CARTA)
+           ========================================================= */
         @media print {
-            html, body {
-                height: auto !important;
-                min-height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-                overflow: hidden !important;
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
             }
-
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-size: 10pt;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             .no-print {
                 display: none !important;
             }
-
-            .print-only {
+            .print-only-header {
                 display: block !important;
-                width: 100%;
-                padding: 8mm 10mm;
+            }
+            .main-grid {
+                display: block !important;
+            }
+            .track-card {
+                border: 1.5px solid #334155 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                margin-bottom: 12px;
+                break-inside: avoid;
+            }
+            .track-surface {
+                background: #ffffff !important;
+                padding: 8px !important;
+            }
+            .judge-zone {
+                border-color: #475569 !important;
+                background-color: #f8fafc !important;
+                color: #000000 !important;
+                transform: none !important;
+            }
+            .judge-zone * {
+                color: #000000 !important;
+            }
+            .judge-chip {
+                background-color: #f1f5f9 !important;
+                border: 1px solid #64748b !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }
+            .judge-chip * {
+                color: #000000 !important;
+            }
+            .summary-card {
+                border: 1.5px solid #334155 !important;
                 background: #ffffff !important;
                 color: #000000 !important;
-                box-sizing: border-box;
-                page-break-after: avoid !important;
-                break-inside: avoid !important;
+                break-inside: avoid;
             }
-
-            @page {
-                size: A4 portrait;
-                margin: 0;
+            .summary-card * {
+                color: #000000 !important;
             }
-
-            .print-header {
-                border-bottom: 2px solid #000;
-                padding-bottom: 5px;
-                margin-bottom: 8px;
-                text-align: left;
-            }
-
-            .print-header h2 {
-                font-size: 13.5pt;
-                font-weight: 800;
-                margin: 0 0 2px 0;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-            }
-
-            .print-header .race-subtitle {
-                font-size: 11pt;
-                font-weight: 700;
-                margin: 0;
-                color: #111111;
-            }
-
-            .print-table-wrapper {
-                width: 68%;
-                margin: 0 0 10px 0;
-            }
-
-            table.print-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 9.5pt;
-                table-layout: fixed;
-            }
-
-            table.print-table th {
-                background-color: #f1f5f9 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                border: 1px solid #000 !important;
-                padding: 3px 8px;
-                text-align: left;
-                font-weight: 800;
-                color: #000 !important;
-            }
-
-            table.print-table td {
-                border: 1px solid #000 !important;
-                padding: 2.5px 8px;
-                color: #000 !important;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .print-track-section {
-                border-top: 2px solid #000;
-                padding-top: 6px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                break-inside: avoid !important;
-            }
-
-            .print-track-section h4 {
-                font-size: 10pt;
-                font-weight: 800;
-                margin: 0 0 4px 0;
-                align-self: flex-start;
-                text-transform: uppercase;
-            }
-
-            #print-svg-container {
-                width: 100%;
-                height: 122mm;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .print-svg rect[fill="url(#bgGradient)"] { fill: #ffffff !important; }
-            .print-svg path { fill: none !important; stroke: #000000 !important; stroke-width: 2px !important; }
-            .print-svg text { fill: #000000 !important; font-weight: bold !important; }
-            .print-svg circle { fill: #ffffff !important; stroke: #000000 !important; stroke-width: 1.5px !important; }
-            .print-svg rect:not([fill="url(#bgGradient)"]) { fill: #ffffff !important; stroke: #000000 !important; stroke-width: 1px !important; }
-            .print-svg line { stroke: #000000 !important; }
         }
 
-        .print-only {
+        .print-only-header {
             display: none;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased transition-colors duration-200">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Toast notification banner -->
-    <div id="toast-banner" class="no-print fixed bottom-5 right-5 z-[60] hidden max-w-sm bg-slate-900 text-white border border-blue-500/40 rounded-xl px-4 py-3 shadow-2xl text-xs font-medium flex items-center gap-2.5">
-        <i id="toast-icon" class="fa-solid fa-circle-info text-blue-400 text-sm shrink-0"></i>
-        <span id="toast-message">Mensaje</span>
+    <!-- Aviso Remoto desde GitHub Pages (JSON) -->
+    <div id="remote-notice-banner" class="no-print hidden bg-amber-500/15 border-b border-amber-400/40 px-4 py-2 text-xs">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-extrabold text-[10px] uppercase shrink-0">Aviso</span>
+                <span id="remote-notice-banner-text" class="dm-title font-semibold truncate"></span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" id="remote-notice-open-btn" onclick="openRemoteNoticeModal()" class="underline font-bold text-amber-400 hover:text-amber-300">Ver detalle</button>
+                <button type="button" onclick="dismissRemoteNoticeBanner()" class="text-slate-400 hover:text-white px-1" title="Ocultar aviso"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
     </div>
 
-    <div id="app-container" class="no-print flex-1 flex flex-col min-h-screen">
-        <!-- Top Header Bar -->
-        <header class="dm-header bg-slate-900 border-b border-slate-800 px-3 sm:px-6 py-2.5 sticky top-0 z-30 shadow-lg transition-colors duration-200">
-            <div class="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-2.5">
-                <div class="flex items-center space-x-3 w-full xl:w-auto">
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-md shrink-0">
-                        <i class="fa-solid fa-stopwatch-20 text-white text-xl"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="dm-title font-extrabold text-sm sm:text-lg text-white tracking-tight flex flex-wrap items-center gap-2">
-                            <span>Planilla de Posiciones de Jueces - Patinaje de Velocidad</span>
-                        </h1>
-                        <p class="dm-subtitle text-xs text-slate-400">Arrastra los jueces libremente o agrega líneas móviles en la pista</p>
-                    </div>
-                </div>
-
-                <!-- Compact two-row action buttons -->
-                <div class="flex flex-wrap items-center justify-start sm:justify-end gap-1.5 sm:gap-2 w-full xl:w-auto xl:max-w-[560px]">
-                    <button type="button" onclick="openAddTrackLineModal()" class="text-xs bg-indigo-900/50 hover:bg-indigo-800/80 text-indigo-200 border border-indigo-700/60 px-2.5 py-1.5 rounded-xl font-medium transition flex items-center justify-center shadow-sm whitespace-nowrap">
-                        <span>Nueva Línea</span>
-                    </button>
-                    <button type="button" onclick="exportJSONBackup()" class="text-xs bg-blue-900/60 hover:bg-blue-800/80 text-blue-200 border border-blue-700/60 px-2.5 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5 shadow-sm whitespace-nowrap" title="Descargar copia de seguridad">
-                        <i class="fa-solid fa-floppy-disk text-blue-400"></i>
-                        <span>Guardar Back Up</span>
-                    </button>
-                    <button type="button" onclick="document.getElementById('import-file-input').click()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5 border border-slate-700 shadow-sm whitespace-nowrap" title="Cargar copia de seguridad">
-                        <i class="fa-solid fa-folder-open text-amber-400"></i>
-                        <span>Abrir Back Up</span>
-                    </button>
-                    <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importJSONBackup(event)">
-                    <button type="button" onclick="resetAssignments()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5 border border-slate-700 shadow-sm whitespace-nowrap">
-                        <i class="fa-solid fa-rotate-left text-amber-400"></i>
-                        <span>Reiniciar</span>
-                    </button>
-                    <button type="button" onclick="toggleThemeMode()" id="btn-theme-toggle" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1.5 rounded-xl font-semibold transition flex items-center gap-1.5 border border-slate-700 shadow-sm whitespace-nowrap" title="Cambiar entre modo día y modo noche">
-                        <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-400"></i>
-                        <span id="theme-toggle-label">Día</span>
-                    </button>
-                    <button type="button" onclick="shareWhatsAppImage()" id="btn-whatsapp-share" class="text-xs bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center gap-1.5 border border-green-400/30 whitespace-nowrap" title="Compartir imagen PNG por WhatsApp">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>WhatsApp</span>
-                    </button>
-                    <button type="button" onclick="triggerPrint()" class="text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3 py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center gap-1.5 border border-emerald-500/30 whitespace-nowrap">
-                        <i class="fa-solid fa-print"></i>
-                        <span>Imprimir</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Workspace -->
-        <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col gap-4">
-            <!-- Race Tabs Bar -->
-            <div class="dm-tabbar flex items-center gap-1.5 overflow-x-auto custom-scrollbar bg-slate-900 border border-slate-800 rounded-xl p-1.5 shadow-md transition-colors duration-200">
-                <div id="tabs-container" class="flex items-center gap-1.5 shrink-0"></div>
-                <button type="button" onclick="addNewTab()" title="Agregar nueva solapa" class="dm-btn-secondary px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1 border border-slate-700 shrink-0">
-                    <i class="fa-solid fa-plus text-blue-400"></i>
-                    <span>Nueva Carrera</span>
-                </button>
-                <div class="ml-auto flex items-center gap-1 pl-2 shrink-0">
-                    <button type="button" onclick="renameCurrentTab()" title="Renombrar solapa actual" class="dm-btn-secondary p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700"><i class="fa-solid fa-pen"></i></button>
-                    <button type="button" onclick="duplicateCurrentTab()" title="Duplicar solapa actual" class="dm-btn-secondary p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700"><i class="fa-solid fa-copy"></i></button>
-                    <button type="button" onclick="deleteCurrentTab()" title="Eliminar solapa actual" class="p-2 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 text-xs border border-red-800/60"><i class="fa-solid fa-trash-can"></i></button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Interactive Rink Diagram -->
-                <div class="dm-surface lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col transition-colors duration-200">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <h2 class="dm-title text-sm font-bold text-white tracking-wide flex items-center gap-2">
-                                Diagrama Interactivo del Patinódromo
-                                <span id="current-race-title" class="text-xs text-blue-400 font-normal"></span>
-                            </h2>
-                        </div>
-                        <span class="dm-pill text-xs text-slate-400 font-medium bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700/60">
-                            <i class="fa-solid fa-hand-pointer text-blue-400 mr-1"></i> Arrastra jueces o líneas
-                        </span>
-                    </div>
-
-                    <div class="dm-track-frame relative w-full aspect-[4/3] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden flex items-center justify-center shadow-inner transition-colors duration-200">
-                        <svg id="track-svg" viewBox="0 0 900 650" class="w-full h-full text-slate-300 select-none touch-none">
-                            <defs>
-                                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#0f172a" />
-                                    <stop offset="100%" stop-color="#020617" />
-                                </linearGradient>
-                                <linearGradient id="surfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.35" />
-                                    <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.45" />
-                                    <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.35" />
-                                </linearGradient>
-                            </defs>
-
-                            <rect x="0" y="0" width="900" height="650" fill="url(#bgGradient)"/>
-                            <path d="M 280 110 L 620 110 A 175 175 0 0 1 620 460 L 280 460 A 175 175 0 0 1 280 110 Z" fill="none" stroke="#1e293b" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M 280 110 L 620 110 A 175 175 0 0 1 620 460 L 280 460 A 175 175 0 0 1 280 110 Z" fill="none" stroke="url(#surfaceGrad)" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M 280 135 L 620 135 A 150 150 0 0 1 620 435 L 280 435 A 150 150 0 0 1 280 135 Z" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 6" opacity="0.8"/>
-                            <path d="M 280 85 L 620 85 A 200 200 0 0 1 620 485 L 280 485 A 200 200 0 0 1 280 85 Z" fill="none" stroke="#334155" stroke-width="3"/>
-
-                            <!-- Fixed Finish Line -->
-                            <g>
-                                <line x1="520" y1="435" x2="520" y2="485" stroke="#ef4444" stroke-width="5" stroke-dasharray="4 2"/>
-                                <text x="520" y="502" fill="#ef4444" text-anchor="middle" font-size="10" font-weight="900">META / LLEGADA</text>
-                            </g>
-
-                            <!-- Dynamic Track Lines Container -->
-                            <g id="svg-track-lines-container"></g>
-
-                            <text x="450" y="65" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700" letter-spacing="1">RECTA OPUESTA (ARRIBA)</text>
-                            <text x="360" y="508" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700" letter-spacing="1">RECTA PRINCIPAL (ABAJO)</text>
-                            <text x="70" y="285" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700" transform="rotate(-90 70,285)">CURVA 3-4 (IZQUIERDA)</text>
-                            <text x="830" y="285" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700" transform="rotate(90 830,285)">CURVA 1-2 (DERECHA)</text>
-
-                            <rect x="25" y="495" width="850" height="145" rx="14" fill="#020617" stroke="#1e293b" stroke-width="2" stroke-dasharray="4 4"/>
-                            <text x="450" y="512" text-anchor="middle" fill="#475569" font-size="10" font-weight="800" letter-spacing="1">JUECES PENDIENTES DE ASIGNACIÓN (FILA INFERIOR 1 Y 2)</text>
-
-                            <g id="svg-pins-container"></g>
-                        </svg>
-                    </div>
-
-                    <div class="dm-divider dm-muted mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
-                        <div class="flex items-center gap-4">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Asignado</span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Disponible</span>
-                        </div>
-                        <span class="text-slate-500 text-[11px]">Clic en una línea móvil para editarla o arrástrala.</span>
-                    </div>
-                </div>
-
-                <!-- Right Side Panel: Judges & Positions -->
-                <div class="dm-surface lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col transition-colors duration-200">
-                    <div class="dm-tabbar flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 mb-4">
-                        <button type="button" id="side-tab-judges" onclick="switchSideTab('judges')" class="tab-panel-btn active flex-1 py-1.5 px-3 rounded-lg text-xs font-bold text-center border border-transparent">
-                            <i class="fa-solid fa-users mr-1.5"></i> Jueces (<span id="count-judges-badge">0</span>)
-                        </button>
-                        <button type="button" id="side-tab-positions" onclick="switchSideTab('positions')" class="tab-panel-btn flex-1 py-1.5 px-3 rounded-lg text-xs font-bold text-center text-slate-400 border border-transparent">
-                            <i class="fa-solid fa-map-pin mr-1.5"></i> Posiciones (<span id="count-positions-badge">0</span>)
-                        </button>
-                    </div>
-
-                    <div id="side-content-judges" class="flex-1 flex flex-col space-y-3 overflow-y-auto max-h-[500px] custom-scrollbar pr-1">
-                        <button type="button" onclick="openQuickAddModal('judge')" class="w-full py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs rounded-xl border border-blue-500/30 transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-user-plus"></i> Agregar Nuevo Juez
-                        </button>
-                        <div id="judges-list-panel" class="space-y-2"></div>
-                    </div>
-
-                    <div id="side-content-positions" class="hidden flex-1 flex flex-col space-y-3 overflow-y-auto max-h-[500px] custom-scrollbar pr-1">
-                        <button type="button" onclick="openQuickAddModal('position')" class="w-full py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-plus"></i> Agregar Nueva Posición
-                        </button>
-                        <div id="positions-list-panel" class="space-y-2"></div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Developer Footer -->
-        <footer class="dm-footer bg-slate-900/80 border-t border-slate-800/80 py-2.5 px-4 text-center mt-auto transition-colors duration-200">
-            <p class="dm-muted text-xs text-slate-400 flex items-center justify-center gap-1.5 font-medium">
-                <i class="fa-solid fa-code text-blue-400"></i>
-                <span>Desarrollado por:</span>
-                <a href="mailto:walterfjofre@gmail.com" class="text-blue-400 hover:underline font-semibold">walterfjofre@gmail.com</a>
-            </p>
-        </footer>
-    </div>
-
-    <!-- Modal: Assign Judge Position -->
-    <div id="assign-modal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- Modal: Detalle de Aviso Remoto -->
+    <div id="remote-notice-modal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-3">
-                    <div id="modal-judge-avatar" class="w-10 h-10 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm shadow">--</div>
-                    <div>
-                        <h3 id="modal-judge-name" class="dm-title font-extrabold text-white text-base">Asignar Posición</h3>
-                        <p class="dm-muted text-xs text-slate-400">Selecciona o crea una posición en la pista</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeAssignModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="dm-muted block text-xs font-semibold text-slate-300 mb-1">Posición en Pista</label>
-                    <select id="modal-position-select" onchange="toggleCustomPosInput()" class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-blue-500"></select>
-                </div>
-                <div id="custom-pos-container" class="hidden">
-                    <label class="dm-muted block text-xs font-semibold text-slate-300 mb-1">Nombre de la Nueva Posición</label>
-                    <input type="text" id="custom-pos-input" placeholder="Ej: Control de Transponders..." class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-blue-500">
-                </div>
-            </div>
-            <div class="dm-divider flex items-center justify-between pt-2 border-t border-slate-800">
-                <button type="button" onclick="unassignCurrentModalJudge()" class="text-xs bg-red-950/60 hover:bg-red-900 text-red-300 px-3 py-2 rounded-xl font-medium border border-red-800/60 transition"><i class="fa-solid fa-user-minus mr-1"></i> Sin Posición</button>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeAssignModal()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-medium transition">Cancelar</button>
-                    <button type="button" onclick="saveModalAssignment()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow transition">Guardar</button>
+                    <i class="fa-solid fa-bullhorn text-amber-400 text-lg"></i>
+                    <h3 id="remote-notice-title" class="dm-title font-bold text-lg">Aviso Oficial</h3>
                 </div>
+                <button type="button" onclick="closeRemoteNoticeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal: Add / Edit Track Line -->
-    <div id="line-modal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
-            <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 id="line-modal-title" class="dm-title font-extrabold text-white text-base">Nueva Línea en Pista</h3>
-                <button type="button" onclick="closeLineModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="dm-muted block text-xs font-semibold text-slate-300 mb-1">Nombre / Identificación</label>
-                    <input type="text" id="input-line-name" placeholder="Ej: Relevos, 100m, Salida..." class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="dm-muted block text-xs font-semibold text-slate-300 mb-1">Zona de la Pista</label>
-                    <select id="input-line-zone" class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
-                        <option value="principal">Recta Principal (Abajo)</option>
-                        <option value="opuesta">Recta Opuesta (Arriba)</option>
-                        <option value="curva_derecha">Curva 1-2 (Derecha)</option>
-                        <option value="curva_izquierda">Curva 3-4 (Izquierda)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="dm-muted block text-xs font-semibold text-slate-300 mb-1">Color de Línea</label>
-                    <select id="input-line-color" class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
-                        <option value="#3b82f6">Azul (Transición / Salida)</option>
-                        <option value="#10b981">Verde (Intermedio)</option>
-                        <option value="#f59e0b">Amarillo (Advertencia)</option>
-                        <option value="#ef4444">Rojo (Llegada / Relevos)</option>
-                        <option value="#a855f7">Morado (Personalizado)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="dm-divider flex items-center justify-between pt-2 border-t border-slate-800">
-                <button type="button" id="modal-delete-line-btn" onclick="deleteCurrentLineModal()" class="text-xs bg-red-950/60 hover:bg-red-900 text-red-300 px-3 py-2 rounded-xl font-medium border border-red-800/60 transition hidden">Eliminar</button>
-                <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" onclick="closeLineModal()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl font-medium transition">Cancelar</button>
-                    <button type="button" onclick="saveLineModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-semibold shadow transition">Guardar Línea</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Quick Action / Confirmation -->
-    <div id="quick-action-modal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
-            <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 id="quick-modal-title" class="dm-title font-extrabold text-white text-base">Acción</h3>
-                <button type="button" onclick="closeQuickActionModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="quick-modal-body" class="space-y-2">
-                <label id="quick-modal-label" class="dm-muted block text-xs font-semibold text-slate-300">Nombre</label>
-                <input type="text" id="quick-modal-input" class="dm-input w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl p-2.5 focus:outline-none focus:border-blue-500">
-            </div>
-            <p id="quick-modal-desc" class="dm-muted hidden text-xs text-slate-300 leading-relaxed"></p>
-            <div class="dm-divider flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-                <button type="button" onclick="closeQuickActionModal()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-medium transition">Cancelar</button>
-                <button type="button" id="quick-modal-confirm-btn" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow transition">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: WhatsApp Image Preview -->
-    <div id="wa-preview-modal" class="no-print fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4">
-            <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="dm-title font-extrabold text-white text-base flex items-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-green-400 text-lg"></i> Imagen Lista para WhatsApp
-                </h3>
-                <button type="button" onclick="closeWaModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="dm-input bg-slate-950 border border-slate-800 rounded-xl p-2 max-h-[60vh] overflow-y-auto flex justify-center">
-                <img id="wa-preview-img" src="" alt="Vista previa planilla" class="max-w-full h-auto rounded-lg shadow">
-            </div>
-            <div class="dm-divider flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-800">
-                <button type="button" onclick="closeWaModal()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-medium transition">Cerrar</button>
-                <a id="wa-download-link" href="#" download="planilla_jueces.png" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-download"></i> Descargar PNG
+            <p id="remote-notice-body" class="dm-muted text-sm text-slate-300 whitespace-pre-line leading-relaxed"></p>
+            <div id="remote-notice-link-wrap" class="hidden">
+                <a id="remote-notice-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:underline">
+                    <span>Abrir enlace</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
                 </a>
-                <button type="button" id="wa-native-share-btn" onclick="triggerNativeShare()" class="hidden text-xs bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl font-semibold shadow transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes"></i> Enviar a WhatsApp
-                </button>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="closeRemoteNoticeModal()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition">Entendido</button>
             </div>
         </div>
     </div>
-
 
     <!-- Modal: Colaboración cada 20 usos -->
     <div id="collab-modal" class="no-print fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -635,1232 +310,1097 @@
                 <button type="button" onclick="closeCollabModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <p class="dm-muted text-xs text-slate-300 leading-relaxed">
-                Ya usaste esta planilla <span id="collab-uses-count" class="font-bold text-blue-400">20</span> veces. Si te resulta útil en las fechas y torneos, podés colaborar con un aporte voluntario por Mercado Pago o marcar que ya colaboraste.
+                Ya usaste esta planilla <span id="collab-uses-count" class="font-bold text-blue-400">20</span> veces. Si te resulta útil en las fechas y torneos, podés colaborar por Mercado Pago o PayPal, o marcar que ya colaboraste.
             </p>
-            <div class="flex flex-col sm:flex-row gap-2 pt-1">
-                <a href="https://link.mercadopago.com.ar/walterfjofre" target="_blank" rel="noopener noreferrer" onclick="markAsCollaborated()" class="flex-1 text-center text-xs bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-hand-holding-dollar"></i>
-                    <span>Colaborar en Mercado Pago</span>
-                </a>
-                <button type="button" onclick="markAsCollaborated()" class="dm-btn-secondary text-xs bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-700/50 px-3.5 py-2.5 rounded-xl font-semibold transition">
+            <div class="flex flex-col gap-2 pt-1">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <a href="https://link.mercadopago.com.ar/walterfjofre" target="_blank" rel="noopener noreferrer" onclick="markAsCollaborated()" class="flex-1 text-center text-xs bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold px-3.5 py-2.5 rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                        <span>Mercado Pago</span>
+                    </a>
+                    <a href="https://paypal.me/walterfjofre" target="_blank" rel="noopener noreferrer" onclick="markAsCollaborated()" class="flex-1 text-center text-xs bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold px-3.5 py-2.5 rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                        <i class="fa-brands fa-paypal"></i>
+                        <span>PayPal</span>
+                    </a>
+                </div>
+                <button type="button" onclick="markAsCollaborated()" class="dm-btn-secondary w-full text-xs bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-700/50 px-3.5 py-2 rounded-xl font-semibold transition">
                     Ya colaboré
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Aviso Remoto JSON -->
-    <div id="remote-notice-modal" class="no-print fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 id="remote-notice-title" class="dm-title font-extrabold text-white text-base">Aviso</h3>
-                <button type="button" onclick="closeRemoteNoticeModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- Encabezado exclusivo para impresión -->
+    <div class="print-only-header mb-3 border-b-2 border-slate-800 pb-2">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-tight text-slate-900">Planilla de Posiciones de Jueces - Patinaje de Velocidad</h1>
+                <p id="print-subtitle" class="text-xs text-slate-700 font-medium mt-0.5"></p>
             </div>
-            <p id="remote-notice-message" class="dm-muted text-xs text-slate-300 leading-relaxed whitespace-pre-line"></p>
-            <div id="remote-notice-link-wrap" class="hidden pt-1">
-                <a id="remote-notice-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl shadow transition">
-                    <span id="remote-notice-link-text">Ver más</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-                </a>
-            </div>
-            <div class="dm-divider flex justify-end pt-2 border-t border-slate-800">
-                <button type="button" onclick="closeRemoteNoticeModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl font-semibold transition">Entendido</button>
+            <div class="text-right text-xs text-slate-600">
+                <span id="print-date"></span>
             </div>
         </div>
     </div>
 
-    <!-- Single-Page A4 Print Layout -->
-    <div class="print-only">
-        <div class="print-header">
-            <h2>Planilla de Posiciones de Jueces - Patinaje de Velocidad</h2>
-            <p id="print-race-name" class="race-subtitle"></p>
+    <!-- Barra superior de controles -->
+    <header class="dm-header no-print sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+        <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Título y contexto de jornada -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-900/30 shrink-0">
+                    <i class="fa-solid fa-flag-checkered text-white text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="dm-title font-extrabold text-base sm:text-lg tracking-tight leading-none">Posiciones de Jueces</h1>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">PATÍN CARRERA</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <input type="text" id="event-name" placeholder="Torneo / Fecha (ej. Regional Mar del Plata)"
+                            class="dm-input text-xs bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 w-48 sm:w-60">
+                        <select id="session-shift" onchange="saveState()"
+                            class="dm-input text-xs bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 focus:outline-none focus:border-blue-500">
+                            <option value="Mañana">Turno Mañana</option>
+                            <option value="Tarde" selected>Turno Tarde</option>
+                            <option value="Jornada Completa">Jornada Completa</option>
+                        </select>
+                        <input type="text" id="jefe-jueces" placeholder="Jefe/a de Jueces..."
+                            class="dm-input text-xs bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 w-36 sm:w-44">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones principales -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="toggleDayMode()" id="btn-day-mode" title="Alternar entre Modo Noche y Modo Día para exteriores"
+                    class="dm-btn-secondary px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-sun" id="day-mode-icon"></i>
+                    <span id="day-mode-label">Modo Día</span>
+                </button>
+                <button type="button" onclick="openJudgeManager()"
+                    class="dm-btn-secondary px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-users-gear text-sky-400"></i>
+                    <span>Jueces (<span id="header-judge-count">0</span>)</span>
+                </button>
+                <button type="button" onclick="clearAllAssignments()"
+                    class="px-3 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/70 text-rose-300 text-xs font-semibold border border-rose-800/60 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Limpiar Pista</span>
+                </button>
+                <button type="button" onclick="exportSummaryText()"
+                    class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow flex items-center gap-1.5 transition">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Copiar Resumen</span>
+                </button>
+                <button type="button" onclick="window.print()"
+                    class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-900/40 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Imprimir / PDF</span>
+                </button>
+            </div>
         </div>
+    </header>
 
-        <div class="print-table-wrapper">
-            <table class="print-table">
-                <colgroup>
-                    <col style="width: 38%;">
-                    <col style="width: 62%;">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th>JUEZ OFICIAL</th>
-                        <th>POSICIÓN ASIGNADA</th>
-                    </tr>
-                </thead>
-                <tbody id="print-table-body"></tbody>
-            </table>
-        </div>
+    <!-- Cuerpo principal -->
+    <main class="main-grid flex-1 max-w-[1440px] w-full mx-auto p-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
 
-        <div class="print-track-section">
-            <h4>Ubicación de Jueces en Pista</h4>
-            <div id="print-svg-container"></div>
-        </div>
-    </div>
+        <!-- Columna izquierda: Diagrama del Patinódromo (8 columnas en XL) -->
+        <section class="track-card dm-card xl:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <!-- Barra superior de la pista -->
+            <div class="dm-divider px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <h2 class="dm-title font-bold text-sm uppercase tracking-wider">Patinódromo — Sentido Antihorario</h2>
+                </div>
+                <div class="dm-muted flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
+                    <span><i class="fa-solid fa-hand-pointer text-sky-400 mr-1"></i>Arrastrá o tocá un puesto para asignar</span>
+                    <span class="hidden sm:inline">•</span>
+                    <span class="hidden sm:inline"><i class="fa-solid fa-arrows-left-right text-amber-400 mr-1"></i>Sentido de giro: <strong class="dm-title text-slate-200">← Izquierda</strong></span>
+                </div>
+            </div>
 
-    <script>
-        const defaultJudgesList = [
-            { id: 'j1', name: 'DIEGO', role: 'Juez Oficial' },
-            { id: 'j2', name: 'FABIOLA', role: 'Juez Oficial' },
-            { id: 'j3', name: 'GLADYS', role: 'Juez Oficial' },
-            { id: 'j4', name: 'HUGO', role: 'Juez Oficial' },
-            { id: 'j5', name: 'MARCELO', role: 'Juez Oficial' },
-            { id: 'j6', name: 'PAOLA', role: 'Juez Oficial' },
-            { id: 'j7', name: 'SILVIA', role: 'Juez Oficial' },
-            { id: 'j8', name: 'VERONICA', role: 'Juez Oficial' },
-            { id: 'j9', name: 'CARLOS', role: 'Juez Oficial' },
-            { id: 'j10', name: 'ANA', role: 'Juez Oficial' },
-            { id: 'j11', name: 'ROBERTO', role: 'Juez Oficial' },
-            { id: 'j12', name: 'LAURA', role: 'Juez Oficial' }
-        ];
+            <!-- Lienzo del Patinódromo -->
+            <div class="track-surface p-3 sm:p-5">
+                <!-- Pista ovalada con zonas perimetrales e interiores -->
+                <div class="relative w-full rounded-[44px] sm:rounded-[72px] border-2 border-slate-700/80 bg-slate-950/60 p-3 sm:p-5">
 
-        const defaultPositionsList = [
-            { id: 'p1', name: 'Secretario de Pista', defaultX: 320, defaultY: 260 },
-            { id: 'p2', name: 'Juez Árbitro', defaultX: 450, defaultY: 260 },
-            { id: 'p3', name: 'Juez Asistente', defaultX: 580, defaultY: 260 },
-            { id: 'p4', name: 'Largada', defaultX: 430, defaultY: 450 },
-            { id: 'p5', name: 'Llegada / Meta', defaultX: 580, defaultY: 450 },
-            { id: 'p6', name: 'Campana y CV', defaultX: 490, defaultY: 410 },
-            { id: 'p7', name: 'Pre Pista', defaultX: 95, defaultY: 450 },
-            { id: 'p8', name: 'Curva 1', defaultX: 680, defaultY: 420 },
-            { id: 'p9', name: 'Curva 2', defaultX: 680, defaultY: 150 },
-            { id: 'p10', name: 'Curva 3', defaultX: 220, defaultY: 150 },
-            { id: 'p11', name: 'Curva 4', defaultX: 220, defaultY: 420 },
-            { id: 'p12', name: 'Cámara de Llamado', defaultX: 250, defaultY: 460 },
-            { id: 'p13', name: 'Recta Principal', defaultX: 350, defaultY: 460 },
-            { id: 'p14', name: 'Recta Opuesta', defaultX: 450, defaultY: 110 }
-        ];
+                    <!-- Fila superior: Recta Opuesta / Contrarecta -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 mb-3">
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-amber-500/35 p-2.5" data-zone="recta_opuesta_1">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">Recta Opuesta — Ingreso Curva 2</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Pista</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="recta_opuesta_1"></div>
+                        </div>
 
-        let appData = {
-            judges: [...defaultJudgesList],
-            positions: [...defaultPositionsList],
-            activeTab: 0,
-            tabs: [
-                {
-                    id: 't1',
-                    name: '10k Eliminación',
-                    assignments: {
-                        j1: 'Juez Árbitro',
-                        j2: 'Secretario de Pista',
-                        j3: 'Llegada / Meta',
-                        j4: 'Curva 1',
-                        j5: 'Curva 2',
-                        j6: 'Curva 3',
-                        j7: 'Curva 4',
-                        j8: 'Campana y CV'
-                    },
-                    customCoords: {},
-                    trackLines: [
-                        { id: 'line_demo_1', name: 'RELEVOS', zone: 'principal', pos: 370, color: '#3b82f6' }
-                    ]
-                }
-            ]
-        };
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-amber-500/35 p-2.5" data-zone="recta_opuesta_centro">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">Recta Opuesta — Centro</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Control</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="recta_opuesta_centro"></div>
+                        </div>
 
-        let currentActiveSideTab = 'judges';
-        let activeModalJudgeId = null;
-        let activeModalLineId = null;
-        let dragLineId = null;
-        let currentWaBlob = null;
-        let currentWaFileName = 'planilla_jueces.png';
-        let toastTimeout = null;
-        let isDayMode = false;
-        const STORAGE_KEY = 'patinodromo_velocidad_v8_data';
-        const THEME_STORAGE_KEY = 'patinodromo_velocidad_theme_mode';
-
-        function applyThemeMode(dayMode) {
-            isDayMode = Boolean(dayMode);
-            document.body.classList.toggle('day-mode', isDayMode);
-
-            const iconEl = document.getElementById('theme-toggle-icon');
-            const labelEl = document.getElementById('theme-toggle-label');
-            if (iconEl && labelEl) {
-                if (isDayMode) {
-                    iconEl.className = 'fa-solid fa-moon text-indigo-600';
-                    labelEl.textContent = 'Noche';
-                } else {
-                    iconEl.className = 'fa-solid fa-sun text-amber-400';
-                    labelEl.textContent = 'Día';
-                }
-            }
-        }
-
-        function toggleThemeMode() {
-            applyThemeMode(!isDayMode);
-            try {
-                localStorage.setItem(THEME_STORAGE_KEY, isDayMode ? 'day' : 'night');
-            } catch (err) {
-                console.error('Theme save error:', err);
-            }
-            showToast(isDayMode ? 'Modo Día activado.' : 'Modo Noche activado.');
-        }
-
-        function showToast(message, type = 'info') {
-            const banner = document.getElementById('toast-banner');
-            const msgEl = document.getElementById('toast-message');
-            const iconEl = document.getElementById('toast-icon');
-            if (!banner || !msgEl || !iconEl) return;
-
-            msgEl.textContent = message;
-            iconEl.className = type === 'error'
-                ? 'fa-solid fa-circle-exclamation text-red-400 text-sm shrink-0'
-                : 'fa-solid fa-circle-check text-emerald-400 text-sm shrink-0';
-
-            banner.classList.remove('hidden');
-            if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                banner.classList.add('hidden');
-            }, 3000);
-        }
-
-        function initApp() {
-            try {
-                const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-                applyThemeMode(savedTheme === 'day');
-            } catch (e) {
-                applyThemeMode(false);
-            }
-
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length > 0 && Array.isArray(parsed.judges)) {
-                        appData = parsed;
-                        appData.tabs.forEach(t => {
-                            if (!t.trackLines) t.trackLines = [];
-                            if (!t.assignments) t.assignments = {};
-                            if (!t.customCoords) t.customCoords = {};
-                        });
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading state:', e);
-            }
-
-            setupLineDragEvents();
-            renderTabs();
-            renderSidePanels();
-            renderSVGTrack();
-        }
-
-        function saveStateToStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            } catch (err) {
-                console.error('Storage save error:', err);
-            }
-        }
-
-        function switchSideTab(tab) {
-            currentActiveSideTab = tab;
-            document.getElementById('side-tab-judges').classList.toggle('active', tab === 'judges');
-            document.getElementById('side-tab-judges').classList.toggle('text-slate-400', tab !== 'judges');
-            document.getElementById('side-tab-positions').classList.toggle('active', tab === 'positions');
-            document.getElementById('side-tab-positions').classList.toggle('text-slate-400', tab !== 'positions');
-            document.getElementById('side-content-judges').classList.toggle('hidden', tab !== 'judges');
-            document.getElementById('side-content-positions').classList.toggle('hidden', tab !== 'positions');
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/[&<>"']/g, s => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[s]));
-        }
-
-        function renderTabs() {
-            const container = document.getElementById('tabs-container');
-            container.innerHTML = '';
-            appData.tabs.forEach((t, idx) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = `px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 border shrink-0 ${idx === appData.activeTab ? 'bg-blue-600 text-white border-blue-500 shadow-md' : 'dm-tab-inactive bg-slate-950 text-slate-400 hover:bg-slate-800 border-slate-800'}`;
-                btn.innerHTML = `<i class="fa-solid fa-flag-checkered text-[10px]"></i> ${escapeHtml(t.name)}`;
-                btn.onclick = () => {
-                    appData.activeTab = idx;
-                    renderTabs();
-                    renderSVGTrack();
-                    renderSidePanels();
-                };
-                container.appendChild(btn);
-            });
-            const activeRace = appData.tabs[appData.activeTab];
-            document.getElementById('current-race-title').innerText = activeRace ? `[${activeRace.name}]` : '';
-        }
-
-        function openQuickAddModal(mode, payload = null) {
-            const modal = document.getElementById('quick-action-modal');
-            const titleEl = document.getElementById('quick-modal-title');
-            const bodyEl = document.getElementById('quick-modal-body');
-            const labelEl = document.getElementById('quick-modal-label');
-            const inputEl = document.getElementById('quick-modal-input');
-            const descEl = document.getElementById('quick-modal-desc');
-            const confirmBtn = document.getElementById('quick-modal-confirm-btn');
-
-            bodyEl.classList.remove('hidden');
-            descEl.classList.add('hidden');
-            inputEl.value = '';
-
-            if (mode === 'new-tab') {
-                titleEl.textContent = 'Nueva Carrera / Solapa';
-                labelEl.textContent = 'Nombre de la prueba';
-                inputEl.placeholder = `Prueba ${appData.tabs.length + 1}`;
-                inputEl.value = `Prueba ${appData.tabs.length + 1}`;
-                confirmBtn.onclick = () => {
-                    const val = inputEl.value.trim();
-                    if (!val) return showToast('Ingresa un nombre para la carrera.', 'error');
-                    appData.tabs.push({ id: 't_' + Date.now(), name: val, assignments: {}, customCoords: {}, trackLines: [] });
-                    appData.activeTab = appData.tabs.length - 1;
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderTabs();
-                    renderSVGTrack();
-                    renderSidePanels();
-                    showToast(`Carrera "${val}" creada.`);
-                };
-            } else if (mode === 'rename-tab') {
-                const current = appData.tabs[appData.activeTab];
-                titleEl.textContent = 'Renombrar Carrera';
-                labelEl.textContent = 'Nuevo nombre';
-                inputEl.value = current.name;
-                confirmBtn.onclick = () => {
-                    const val = inputEl.value.trim();
-                    if (!val) return showToast('El nombre no puede estar vacío.', 'error');
-                    current.name = val;
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderTabs();
-                    showToast('Carrera renombrada.');
-                };
-            } else if (mode === 'delete-tab') {
-                if (appData.tabs.length <= 1) {
-                    return showToast('Debe existir al menos una carrera.', 'error');
-                }
-                const current = appData.tabs[appData.activeTab];
-                titleEl.textContent = 'Eliminar Carrera';
-                bodyEl.classList.add('hidden');
-                descEl.classList.remove('hidden');
-                descEl.textContent = `¿Deseas eliminar la carrera "${current.name}" y sus asignaciones?`;
-                confirmBtn.onclick = () => {
-                    appData.tabs.splice(appData.activeTab, 1);
-                    appData.activeTab = Math.max(0, appData.activeTab - 1);
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderTabs();
-                    renderSVGTrack();
-                    renderSidePanels();
-                    showToast('Carrera eliminada.');
-                };
-            } else if (mode === 'judge') {
-                titleEl.textContent = 'Agregar Nuevo Juez';
-                labelEl.textContent = 'Nombre del juez';
-                inputEl.placeholder = 'Ej: MARTÍN';
-                confirmBtn.onclick = () => {
-                    const val = inputEl.value.trim();
-                    if (!val) return showToast('Ingresa el nombre del juez.', 'error');
-                    appData.judges.push({ id: 'j_' + Date.now(), name: val.toUpperCase(), role: 'Juez Oficial' });
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderSidePanels();
-                    renderSVGTrack();
-                    showToast(`Juez ${val.toUpperCase()} agregado.`);
-                };
-            } else if (mode === 'position') {
-                titleEl.textContent = 'Agregar Nueva Posición';
-                labelEl.textContent = 'Nombre de la posición';
-                inputEl.placeholder = 'Ej: Control de Patines';
-                confirmBtn.onclick = () => {
-                    const val = inputEl.value.trim();
-                    if (!val) return showToast('Ingresa el nombre de la posición.', 'error');
-                    appData.positions.push({ id: 'p_' + Date.now(), name: val, defaultX: 450, defaultY: 300 });
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderSidePanels();
-                    showToast(`Posición "${val}" agregada.`);
-                };
-            } else if (mode === 'delete-judge') {
-                const judge = appData.judges.find(j => j.id === payload);
-                if (!judge) return;
-                titleEl.textContent = 'Eliminar Juez';
-                bodyEl.classList.add('hidden');
-                descEl.classList.remove('hidden');
-                descEl.textContent = `¿Eliminar a ${judge.name} de la planilla?`;
-                confirmBtn.onclick = () => {
-                    appData.judges = appData.judges.filter(j => j.id !== payload);
-                    appData.tabs.forEach(t => {
-                        delete t.assignments[payload];
-                        if (t.customCoords) delete t.customCoords[payload];
-                    });
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderSidePanels();
-                    renderSVGTrack();
-                    showToast('Juez eliminado.');
-                };
-            } else if (mode === 'delete-position') {
-                const pos = appData.positions.find(p => p.id === payload);
-                if (!pos) return;
-                titleEl.textContent = 'Eliminar Posición';
-                bodyEl.classList.add('hidden');
-                descEl.classList.remove('hidden');
-                descEl.textContent = `¿Eliminar la posición "${pos.name}"?`;
-                confirmBtn.onclick = () => {
-                    appData.positions = appData.positions.filter(p => p.id !== payload);
-                    appData.tabs.forEach(t => {
-                        Object.keys(t.assignments).forEach(jId => {
-                            if (t.assignments[jId] === pos.name) delete t.assignments[jId];
-                        });
-                    });
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderSidePanels();
-                    renderSVGTrack();
-                    showToast('Posición eliminada.');
-                };
-            } else if (mode === 'reset-assignments') {
-                const currentTab = appData.tabs[appData.activeTab];
-                titleEl.textContent = 'Reiniciar Posiciones';
-                bodyEl.classList.add('hidden');
-                descEl.classList.remove('hidden');
-                descEl.textContent = `¿Reiniciar todas las asignaciones de "${currentTab.name}"?`;
-                confirmBtn.onclick = () => {
-                    currentTab.assignments = {};
-                    currentTab.customCoords = {};
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    renderSVGTrack();
-                    renderSidePanels();
-                    showToast('Asignaciones reiniciadas.');
-                };
-            } else if (mode === 'delete-line') {
-                titleEl.textContent = 'Eliminar Línea Móvil';
-                bodyEl.classList.add('hidden');
-                descEl.classList.remove('hidden');
-                descEl.textContent = '¿Eliminar esta línea de la pista?';
-                confirmBtn.onclick = () => {
-                    const currentTab = appData.tabs[appData.activeTab];
-                    currentTab.trackLines = currentTab.trackLines.filter(l => l.id !== activeModalLineId);
-                    saveStateToStorage();
-                    closeQuickActionModal();
-                    closeLineModal();
-                    renderSvgTrackLines();
-                    showToast('Línea eliminada.');
-                };
-            }
-
-            modal.classList.remove('hidden');
-            if (!bodyEl.classList.contains('hidden')) {
-                setTimeout(() => inputEl.focus(), 50);
-            }
-        }
-
-        function closeQuickActionModal() {
-            document.getElementById('quick-action-modal').classList.add('hidden');
-        }
-
-        function addNewTab() { openQuickAddModal('new-tab'); }
-        function renameCurrentTab() { openQuickAddModal('rename-tab'); }
-        function deleteCurrentTab() { openQuickAddModal('delete-tab'); }
-
-        function duplicateCurrentTab() {
-            const current = appData.tabs[appData.activeTab];
-            const cloned = {
-                id: 't_' + Date.now(),
-                name: `${current.name} (Copia)`,
-                assignments: JSON.parse(JSON.stringify(current.assignments || {})),
-                customCoords: JSON.parse(JSON.stringify(current.customCoords || {})),
-                trackLines: JSON.parse(JSON.stringify(current.trackLines || []))
-            };
-            appData.tabs.push(cloned);
-            appData.activeTab = appData.tabs.length - 1;
-            saveStateToStorage();
-            renderTabs();
-            renderSVGTrack();
-            renderSidePanels();
-            showToast(`Copia creada: "${cloned.name}".`);
-        }
-
-        function renderSidePanels() {
-            document.getElementById('count-judges-badge').innerText = appData.judges.length;
-            document.getElementById('count-positions-badge').innerText = appData.positions.length;
-            const currentAssignments = appData.tabs[appData.activeTab].assignments || {};
-
-            const jContainer = document.getElementById('judges-list-panel');
-            jContainer.innerHTML = '';
-            appData.judges.forEach(j => {
-                const assignedPos = currentAssignments[j.id];
-                const card = document.createElement('div');
-                card.className = `p-2.5 rounded-xl border transition flex items-center justify-between ${assignedPos ? 'dm-card-assigned bg-slate-950/80 border-slate-800' : 'dm-card-unassigned bg-amber-500/10 border-amber-500/30'}`;
-                card.innerHTML = `
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-full ${assignedPos ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-xs font-bold flex items-center justify-center shrink-0">${escapeHtml(j.name.substring(0, 2).toUpperCase())}</div>
-                        <div class="min-w-0">
-                            <div class="dm-card-title text-xs font-bold text-white truncate">${escapeHtml(j.name)}</div>
-                            <div class="text-[11px] truncate ${assignedPos ? 'text-emerald-400 font-semibold' : 'dm-muted text-slate-500 italic'}">${escapeHtml(assignedPos || 'Disponible')}</div>
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-amber-500/35 p-2.5" data-zone="recta_opuesta_2">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">Recta Opuesta — Salida Curva 1</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Pista</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="recta_opuesta_2"></div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button type="button" onclick="promptAssignJudge('${j.id}')" class="p-1.5 text-blue-400 hover:bg-slate-800 rounded-lg text-xs" title="Asignar"><i class="fa-solid fa-map-pin"></i></button>
-                        <button type="button" onclick="deleteJudge('${j.id}')" class="p-1.5 text-red-400 hover:bg-slate-800 rounded-lg text-xs" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
-                    </div>`;
-                jContainer.appendChild(card);
-            });
 
-            const pContainer = document.getElementById('positions-list-panel');
-            pContainer.innerHTML = '';
-            appData.positions.forEach(p => {
-                const assignedJudges = Object.keys(currentAssignments)
-                    .filter(jId => currentAssignments[jId] === p.name)
-                    .map(jId => appData.judges.find(j => j.id === jId)?.name)
-                    .filter(Boolean);
-                const card = document.createElement('div');
-                card.className = 'dm-card-assigned p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2';
-                card.innerHTML = `
-                    <div class="min-w-0">
-                        <div class="dm-card-title text-xs font-bold text-white truncate">${escapeHtml(p.name)}</div>
-                        <div class="dm-muted text-[11px] text-slate-400 truncate">${assignedJudges.length > 0 ? `Ocupado por: <span class="text-emerald-400 font-semibold">${escapeHtml(assignedJudges.join(', '))}</span>` : '<span class="italic">Vacante</span>'}</div>
+                    <!-- Cuerpo central: Curva 1 (Izquierda) | Anillo de Pista + Cuerda | Curva 2 (Derecha) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+
+                        <!-- Curva 1 (Izquierda - Salida hacia Recta Principal) -->
+                        <div class="lg:col-span-3 judge-zone dm-track-curva rounded-3xl bg-gradient-to-b from-slate-900 to-slate-900/70 border-2 border-sky-500/40 p-3 flex flex-col justify-between gap-2.5" data-zone="curva_1">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
+                                    <span class="text-xs font-black uppercase tracking-wider text-sky-400">Curva 1</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-semibold">Giro Izq.</span>
+                                </div>
+                                <p class="dm-track-sublabel text-[10px] text-slate-400 mb-2">Peraltada • Control de cuerda y invasión</p>
+                            </div>
+
+                            <div class="space-y-2 flex-1 flex flex-col justify-between">
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_1_entrada">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Entrada Curva 1</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_1_vertices">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Vértice / Cuerda C1</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_1_salida">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Salida Curva 1</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Centro: Banda de Pista + Cuerda / Área Central -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-2.5">
+                            <!-- Carril de rodadura representado -->
+                            <div class="dm-track-frame rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 p-2.5">
+                                <div class="flex items-center justify-between text-[10px] uppercase tracking-wider font-bold mb-2 px-1">
+                                    <span class="text-cyan-400"><i class="fa-solid fa-arrow-left mr-1"></i>Sentido de Carrera</span>
+                                    <span class="dm-track-sublabel text-slate-400">Ancho reglamentario • Cuerda interior</span>
+                                </div>
+
+                                <!-- Cuerda / Centro de Pista -->
+                                <div class="judge-zone dm-track-cuerda rounded-xl bg-emerald-950/25 border border-emerald-500/35 p-2.5 mb-2" data-zone="cuerda_centro">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">
+                                            <i class="fa-solid fa-circle-dot mr-1"></i>Cuerda / Interior de Pista
+                                        </span>
+                                        <span class="dm-track-sublabel text-[10px] text-slate-400">Observación interna</span>
+                                    </div>
+                                    <div class="judge-slot rounded-lg bg-slate-950/50 border border-slate-800/80 p-1.5 flex flex-wrap gap-1.5 min-h-[34px]" data-slot="cuerda_centro"></div>
+                                </div>
+
+                                <!-- Zona de Largada / Salidas -->
+                                <div class="judge-zone dm-card rounded-xl bg-indigo-950/30 border border-indigo-500/35 p-2.5" data-zone="largada">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-400">
+                                            <i class="fa-solid fa-play mr-1"></i>Jueces de Largada / Salida
+                                        </span>
+                                        <span class="dm-track-sublabel text-[10px] text-slate-400">Alineación y falsas salidas</span>
+                                    </div>
+                                    <div class="judge-slot rounded-lg bg-slate-950/50 border border-slate-800/80 p-1.5 flex flex-wrap gap-1.5 min-h-[34px]" data-slot="largada"></div>
+                                </div>
+                            </div>
+
+                            <!-- Zona de Llegada / Meta y Cronometraje -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div class="judge-zone dm-card rounded-2xl bg-rose-950/25 border-2 border-rose-500/45 p-2.5" data-zone="llegada_meta">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[11px] font-black uppercase tracking-wider text-rose-400">
+                                            <i class="fa-solid fa-flag-checkered mr-1"></i>Jueces de Llegada (Meta)
+                                        </span>
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">Arribo</span>
+                                    </div>
+                                    <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800 p-1.5 flex flex-wrap gap-1.5 min-h-[42px]" data-slot="llegada_meta"></div>
+                                </div>
+
+                                <div class="judge-zone dm-card rounded-2xl bg-purple-950/25 border-2 border-purple-500/45 p-2.5" data-zone="cronometraje_vueltas">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[11px] font-black uppercase tracking-wider text-purple-400">
+                                            <i class="fa-solid fa-stopwatch mr-1"></i>Cronometraje / Vueltas
+                                        </span>
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">Campana / Tiempos</span>
+                                    </div>
+                                    <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800 p-1.5 flex flex-wrap gap-1.5 min-h-[42px]" data-slot="cronometraje_vueltas"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Curva 2 (Derecha - Ingreso desde Recta Principal) -->
+                        <div class="lg:col-span-3 judge-zone dm-track-curva rounded-3xl bg-gradient-to-b from-slate-900 to-slate-900/70 border-2 border-sky-500/40 p-3 flex flex-col justify-between gap-2.5" data-zone="curva_2">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
+                                    <span class="text-xs font-black uppercase tracking-wider text-sky-400">Curva 2</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-semibold">Peraltada</span>
+                                </div>
+                                <p class="dm-track-sublabel text-[10px] text-slate-400 mb-2">Ingreso y tránsito • Toques y bloqueos</p>
+                            </div>
+
+                            <div class="space-y-2 flex-1 flex flex-col justify-between">
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_2_entrada">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Entrada Curva 2</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_2_vertices">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Vértice / Cuerda C2</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+
+                                <div class="judge-slot dm-card rounded-xl bg-slate-950/70 border border-slate-800 p-2" data-slot="curva_2_salida">
+                                    <div class="dm-track-sublabel text-[10px] font-bold uppercase text-slate-400 mb-1">Salida Curva 2</div>
+                                    <div class="slot-items flex flex-wrap gap-1.5 min-h-[28px]"></div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <button type="button" onclick="deletePosition('${p.id}')" class="p-1.5 text-red-400 hover:bg-slate-800 rounded-lg text-xs shrink-0" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
-                pContainer.appendChild(card);
-            });
-        }
 
-        function renderSVGTrack() {
-            renderSvgTrackLines();
-            const container = document.getElementById('svg-pins-container');
-            container.innerHTML = '';
-
-            const currentTab = appData.tabs[appData.activeTab];
-            const assignments = currentTab.assignments || {};
-            const customCoords = currentTab.customCoords || {};
-
-            const positionJudgeGroups = {};
-            const unassignedJudges = [];
-
-            appData.judges.forEach(j => {
-                const posName = assignments[j.id];
-                if (posName) {
-                    if (!positionJudgeGroups[posName]) positionJudgeGroups[posName] = [];
-                    positionJudgeGroups[posName].push(j);
-                } else {
-                    unassignedJudges.push(j);
-                }
-            });
-
-            const itemsPerRow = 8;
-            unassignedJudges.forEach((j, index) => {
-                const isRow2 = index >= itemsPerRow;
-                const colIndex = isRow2 ? index - itemsPerRow : index;
-                const itemsInThisRow = isRow2
-                    ? Math.min(itemsPerRow, unassignedJudges.length - itemsPerRow)
-                    : Math.min(itemsPerRow, unassignedJudges.length);
-                const spacingX = 100;
-                const startX = 450 - ((itemsInThisRow - 1) * spacingX) / 2;
-                const defaultX = customCoords[j.id]?.x ?? (startX + colIndex * spacingX);
-                const defaultY = customCoords[j.id]?.y ?? (isRow2 ? 600 : 540);
-
-                createJudgeSVGPin(container, j, defaultX, defaultY, false, 0, '');
-            });
-
-            Object.keys(positionJudgeGroups).forEach(posName => {
-                const judgesInPos = positionJudgeGroups[posName];
-                const posObj = appData.positions.find(p => p.name === posName);
-                judgesInPos.forEach((j, stackIndex) => {
-                    let baseX = posObj ? posObj.defaultX : 450;
-                    let baseY = posObj ? posObj.defaultY : 300;
-                    if (customCoords[j.id]) {
-                        baseX = customCoords[j.id].x;
-                        baseY = customCoords[j.id].y;
-                    }
-                    createJudgeSVGPin(container, j, baseX, baseY - (stackIndex * 54), true, stackIndex, posName);
-                });
-            });
-        }
-
-        function renderSvgTrackLines() {
-            const container = document.getElementById('svg-track-lines-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const currentTab = appData.tabs[appData.activeTab];
-            const trackLines = currentTab.trackLines || [];
-
-            trackLines.forEach(line => {
-                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', 'cursor-pointer');
-
-                let x1, y1, x2, y2, textX, textY, textAnchor;
-                if (line.zone === 'principal') {
-                    x1 = line.pos; y1 = 435; x2 = line.pos; y2 = 485;
-                    textX = line.pos; textY = 498; textAnchor = 'middle';
-                } else if (line.zone === 'opuesta') {
-                    x1 = line.pos; y1 = 85; x2 = line.pos; y2 = 135;
-                    textX = line.pos; textY = 75; textAnchor = 'middle';
-                } else if (line.zone === 'curva_derecha') {
-                    x1 = 790; y1 = line.pos; x2 = 835; y2 = line.pos;
-                    textX = 845; textY = line.pos + 3; textAnchor = 'start';
-                } else if (line.zone === 'curva_izquierda') {
-                    x1 = 65; y1 = line.pos; x2 = 110; y2 = line.pos;
-                    textX = 55; textY = line.pos + 3; textAnchor = 'end';
-                }
-
-                const lineElem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                lineElem.setAttribute('x1', x1); lineElem.setAttribute('y1', y1);
-                lineElem.setAttribute('x2', x2); lineElem.setAttribute('y2', y2);
-                lineElem.setAttribute('stroke', line.color); lineElem.setAttribute('stroke-width', '4');
-                lineElem.setAttribute('stroke-dasharray', '4 2');
-
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', textX); text.setAttribute('y', textY);
-                text.setAttribute('fill', line.color); text.setAttribute('text-anchor', textAnchor);
-                text.setAttribute('font-size', '9.5'); text.setAttribute('font-weight', '800');
-                text.textContent = line.name;
-
-                g.appendChild(lineElem);
-                g.appendChild(text);
-
-                let lineMoved = false;
-                const startLineDrag = (e) => {
-                    e.stopPropagation();
-                    lineMoved = false;
-                    dragLineId = line.id;
-                };
-                g.addEventListener('mousedown', (e) => {
-                    if (e.button === 0) startLineDrag(e);
-                });
-                g.addEventListener('touchstart', (e) => {
-                    if (e.touches.length === 1) startLineDrag(e);
-                }, { passive: true });
-                g.addEventListener('mousemove', () => { lineMoved = true; });
-                g.addEventListener('touchmove', () => { lineMoved = true; }, { passive: true });
-                g.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!lineMoved) openEditTrackLineModal(line.id);
-                });
-
-                container.appendChild(g);
-            });
-        }
-
-        function getSvgCoordsFromClient(svg, clientX, clientY) {
-            const pt = svg.createSVGPoint();
-            pt.x = clientX;
-            pt.y = clientY;
-            const ctm = svg.getScreenCTM();
-            return ctm ? pt.matrixTransform(ctm.inverse()) : { x: 450, y: 325 };
-        }
-
-        function setupLineDragEvents() {
-            const svg = document.getElementById('track-svg');
-            if (!svg) return;
-
-            const moveLineAt = (clientX, clientY) => {
-                if (!dragLineId) return;
-                const currentTab = appData.tabs[appData.activeTab];
-                const line = (currentTab.trackLines || []).find(l => l.id === dragLineId);
-                if (!line) return;
-
-                const svgP = getSvgCoordsFromClient(svg, clientX, clientY);
-                if (line.zone === 'principal' || line.zone === 'opuesta') {
-                    line.pos = Math.max(300, Math.min(600, Math.round(svgP.x)));
-                } else {
-                    line.pos = Math.max(130, Math.min(435, Math.round(svgP.y)));
-                }
-                renderSvgTrackLines();
-            };
-
-            window.addEventListener('mousemove', (e) => {
-                if (dragLineId) moveLineAt(e.clientX, e.clientY);
-            });
-
-            window.addEventListener('touchmove', (e) => {
-                if (dragLineId && e.touches.length === 1) {
-                    moveLineAt(e.touches[0].clientX, e.touches[0].clientY);
-                }
-            }, { passive: true });
-
-            const endLineDrag = () => {
-                if (dragLineId) {
-                    dragLineId = null;
-                    saveStateToStorage();
-                }
-            };
-
-            window.addEventListener('mouseup', endLineDrag);
-            window.addEventListener('touchend', endLineDrag);
-        }
-
-        function openAddTrackLineModal() {
-            activeModalLineId = null;
-            document.getElementById('line-modal-title').innerText = 'Nueva Línea en Pista';
-            document.getElementById('input-line-name').value = '';
-            document.getElementById('input-line-zone').value = 'principal';
-            document.getElementById('input-line-color').value = '#3b82f6';
-            document.getElementById('modal-delete-line-btn').classList.add('hidden');
-            document.getElementById('line-modal').classList.remove('hidden');
-        }
-
-        function openEditTrackLineModal(lineId) {
-            const currentTab = appData.tabs[appData.activeTab];
-            const line = (currentTab.trackLines || []).find(l => l.id === lineId);
-            if (!line) return;
-            activeModalLineId = lineId;
-            document.getElementById('line-modal-title').innerText = 'Editar Línea de Pista';
-            document.getElementById('input-line-name').value = line.name;
-            document.getElementById('input-line-zone').value = line.zone;
-            document.getElementById('input-line-color').value = line.color;
-            document.getElementById('modal-delete-line-btn').classList.remove('hidden');
-            document.getElementById('line-modal').classList.remove('hidden');
-        }
-
-        function closeLineModal() {
-            document.getElementById('line-modal').classList.add('hidden');
-            activeModalLineId = null;
-        }
-
-        function saveLineModal() {
-            const name = document.getElementById('input-line-name').value.trim();
-            const zone = document.getElementById('input-line-zone').value;
-            const color = document.getElementById('input-line-color').value;
-            if (!name) {
-                return showToast('Ingresa un nombre para la línea.', 'error');
-            }
-
-            const currentTab = appData.tabs[appData.activeTab];
-            if (!currentTab.trackLines) currentTab.trackLines = [];
-            const defaultPos = (zone === 'principal' || zone === 'opuesta') ? 450 : 280;
-
-            if (activeModalLineId) {
-                const line = currentTab.trackLines.find(l => l.id === activeModalLineId);
-                if (line) { line.name = name.toUpperCase(); line.zone = zone; line.color = color; }
-            } else {
-                currentTab.trackLines.push({ id: 'line_' + Date.now(), name: name.toUpperCase(), zone: zone, pos: defaultPos, color: color });
-            }
-
-            saveStateToStorage();
-            closeLineModal();
-            renderSvgTrackLines();
-            showToast('Línea guardada en la pista.');
-        }
-
-        function deleteCurrentLineModal() {
-            if (!activeModalLineId) return;
-            openQuickAddModal('delete-line');
-        }
-
-        function createJudgeSVGPin(container, judge, x, y, isAssigned, stackIndex = 0, assignedPosName = '') {
-            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            g.setAttribute('transform', `translate(${x}, ${y})`);
-            g.setAttribute('class', 'judge-pin-drag cursor-pointer');
-
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('r', '13');
-            circle.setAttribute('fill', isAssigned ? '#10b981' : '#f59e0b');
-            circle.setAttribute('stroke', '#ffffff');
-            circle.setAttribute('stroke-width', '2');
-
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('y', '3.5'); text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('fill', '#ffffff'); text.setAttribute('font-size', '8.5'); text.setAttribute('font-weight', '900');
-            text.textContent = judge.name.substring(0, 2).toUpperCase();
-
-            const boxHeight = isAssigned && assignedPosName ? 24 : 15;
-            const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            labelBg.setAttribute('x', '-39'); labelBg.setAttribute('y', '15');
-            labelBg.setAttribute('width', '78'); labelBg.setAttribute('height', boxHeight.toString());
-            labelBg.setAttribute('rx', '4'); labelBg.setAttribute('fill', '#0f172a');
-            labelBg.setAttribute('stroke', isAssigned ? '#10b981' : '#f59e0b'); labelBg.setAttribute('stroke-width', '1');
-
-            const labelTextName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            labelTextName.setAttribute('x', '0'); labelTextName.setAttribute('y', isAssigned && assignedPosName ? '25' : '26');
-            labelTextName.setAttribute('text-anchor', 'middle'); labelTextName.setAttribute('fill', '#ffffff');
-            labelTextName.setAttribute('font-size', '8.5'); labelTextName.setAttribute('font-weight', '800');
-            labelTextName.textContent = judge.name;
-
-            g.appendChild(circle); g.appendChild(text); g.appendChild(labelBg); g.appendChild(labelTextName);
-
-            if (isAssigned && assignedPosName) {
-                const labelTextPos = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                labelTextPos.setAttribute('x', '0'); labelTextPos.setAttribute('y', '34.5');
-                labelTextPos.setAttribute('text-anchor', 'middle'); labelTextPos.setAttribute('fill', '#34d399');
-                labelTextPos.setAttribute('font-size', '7'); labelTextPos.setAttribute('font-weight', '600');
-                labelTextPos.textContent = assignedPosName.length > 13 ? assignedPosName.substring(0, 11) + '..' : assignedPosName;
-                g.appendChild(labelTextPos);
-            }
-
-            let isDragging = false, hasMoved = false, startMouseX = 0, startMouseY = 0, initialX = x, initialY = y;
-
-            const beginDrag = (clientX, clientY) => {
-                isDragging = true;
-                hasMoved = false;
-                const svg = document.getElementById('track-svg');
-                const svgP = getSvgCoordsFromClient(svg, clientX, clientY);
-                startMouseX = svgP.x;
-                startMouseY = svgP.y;
-                initialX = x;
-                initialY = y;
-            };
-
-            const moveDrag = (clientX, clientY) => {
-                if (!isDragging) return;
-                const svg = document.getElementById('track-svg');
-                const svgP = getSvgCoordsFromClient(svg, clientX, clientY);
-                const dx = svgP.x - startMouseX;
-                const dy = svgP.y - startMouseY;
-                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-                const newX = Math.max(20, Math.min(880, initialX + dx));
-                const newY = Math.max(20, Math.min(630, initialY + dy));
-                g.setAttribute('transform', `translate(${newX}, ${newY})`);
-                const currentTab = appData.tabs[appData.activeTab];
-                if (!currentTab.customCoords) currentTab.customCoords = {};
-                currentTab.customCoords[judge.id] = { x: newX, y: newY };
-            };
-
-            const onMouseMove = (e) => moveDrag(e.clientX, e.clientY);
-            const onTouchMove = (e) => {
-                if (e.touches.length === 1) moveDrag(e.touches[0].clientX, e.touches[0].clientY);
-            };
-
-            const finishDrag = () => {
-                if (isDragging) {
-                    isDragging = false;
-                    window.removeEventListener('mousemove', onMouseMove);
-                    window.removeEventListener('mouseup', finishDrag);
-                    window.removeEventListener('touchmove', onTouchMove);
-                    window.removeEventListener('touchend', finishDrag);
-                    if (hasMoved) {
-                        saveStateToStorage();
-                        renderSidePanels();
-                    }
-                }
-            };
-
-            g.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return;
-                beginDrag(e.clientX, e.clientY);
-                window.addEventListener('mousemove', onMouseMove);
-                window.addEventListener('mouseup', finishDrag);
-            });
-
-            g.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1) {
-                    beginDrag(e.touches[0].clientX, e.touches[0].clientY);
-                    window.addEventListener('touchmove', onTouchMove, { passive: true });
-                    window.addEventListener('touchend', finishDrag);
-                }
-            }, { passive: true });
-
-            g.addEventListener('click', () => {
-                if (!hasMoved) promptAssignJudge(judge.id);
-            });
-
-            container.appendChild(g);
-        }
-
-        function promptAssignJudge(judgeId) {
-            const judge = appData.judges.find(j => j.id === judgeId);
-            if (!judge) return;
-            activeModalJudgeId = judgeId;
-            const currentTab = appData.tabs[appData.activeTab];
-            const currentPos = (currentTab.assignments && currentTab.assignments[judgeId]) || '';
-
-            document.getElementById('modal-judge-name').innerText = `Asignar a ${judge.name}`;
-            document.getElementById('modal-judge-avatar').innerText = judge.name.substring(0, 2).toUpperCase();
-            const select = document.getElementById('modal-position-select');
-            select.innerHTML = '<option value="">-- Sin Asignar (Fila Inferior) --</option>';
-
-            appData.positions.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.name;
-                opt.innerText = p.name;
-                if (p.name === currentPos) opt.selected = true;
-                select.appendChild(opt);
-            });
-
-            const newOpt = document.createElement('option');
-            newOpt.value = '__NEW__';
-            newOpt.innerText = '+ Agregar nueva posición...';
-            select.appendChild(newOpt);
-
-            document.getElementById('custom-pos-container').classList.add('hidden');
-            document.getElementById('assign-modal').classList.remove('hidden');
-        }
-
-        function toggleCustomPosInput() {
-            const val = document.getElementById('modal-position-select').value;
-            document.getElementById('custom-pos-container').classList.toggle('hidden', val !== '__NEW__');
-            if (val === '__NEW__') document.getElementById('custom-pos-input').focus();
-        }
-
-        function closeAssignModal() {
-            document.getElementById('assign-modal').classList.add('hidden');
-            activeModalJudgeId = null;
-        }
-
-        function unassignCurrentModalJudge() {
-            if (!activeModalJudgeId) return;
-            const currentTab = appData.tabs[appData.activeTab];
-            delete currentTab.assignments[activeModalJudgeId];
-            if (currentTab.customCoords) delete currentTab.customCoords[activeModalJudgeId];
-            saveStateToStorage();
-            closeAssignModal();
-            renderSVGTrack();
-            renderSidePanels();
-        }
-
-        function saveModalAssignment() {
-            if (!activeModalJudgeId) return;
-            const selectVal = document.getElementById('modal-position-select').value;
-            const currentTab = appData.tabs[appData.activeTab];
-            if (!currentTab.assignments) currentTab.assignments = {};
-
-            if (selectVal === '__NEW__') {
-                const customName = document.getElementById('custom-pos-input').value.trim();
-                if (!customName) {
-                    return showToast('Ingresa un nombre para la nueva posición.', 'error');
-                }
-                appData.positions.push({ id: 'p_' + Date.now(), name: customName, defaultX: 450, defaultY: 300 });
-                currentTab.assignments[activeModalJudgeId] = customName;
-            } else if (selectVal) {
-                currentTab.assignments[activeModalJudgeId] = selectVal;
-            } else {
-                delete currentTab.assignments[activeModalJudgeId];
-                if (currentTab.customCoords) delete currentTab.customCoords[activeModalJudgeId];
-            }
-
-            saveStateToStorage();
-            closeAssignModal();
-            renderSVGTrack();
-            renderSidePanels();
-            showToast('Asignación actualizada.');
-        }
-
-        function deleteJudge(id) { openQuickAddModal('delete-judge', id); }
-        function deletePosition(id) { openQuickAddModal('delete-position', id); }
-        function resetAssignments() { openQuickAddModal('reset-assignments'); }
-
-        function exportJSONBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `planilla_jueces_patinaje_velocidad_${new Date().toISOString().slice(0, 10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast('Copia de seguridad JSON descargada.');
-        }
-
-        function importJSONBackup(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const fileReader = new FileReader();
-            fileReader.onload = function (e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (imported && Array.isArray(imported.tabs) && Array.isArray(imported.judges)) {
-                        appData = imported;
-                        appData.tabs.forEach(t => { if (!t.trackLines) t.trackLines = []; });
-                        saveStateToStorage();
-                        renderTabs();
-                        renderSidePanels();
-                        renderSVGTrack();
-                        showToast('Copia de seguridad cargada con éxito.');
-                    } else {
-                        showToast('El archivo no tiene el formato válido.', 'error');
-                    }
-                } catch (err) {
-                    showToast('Error al leer el archivo JSON.', 'error');
-                }
-            };
-            fileReader.readAsText(file);
-            event.target.value = '';
-        }
-
-        function triggerPrint() {
-            const currentTab = appData.tabs[appData.activeTab];
-            document.getElementById('print-race-name').innerText = `Carrera: ${currentTab.name}`;
-            const tbody = document.getElementById('print-table-body');
-            tbody.innerHTML = '';
-
-            appData.judges.forEach(j => {
-                const pos = (currentTab.assignments && currentTab.assignments[j.id]) || 'Sin Asignar / Disponible';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td style="font-weight: bold;">${escapeHtml(j.name)}</td><td>${escapeHtml(pos)}</td>`;
-                tbody.appendChild(tr);
-            });
-
-            const svgOriginal = document.getElementById('track-svg');
-            const svgClone = svgOriginal.cloneNode(true);
-            svgClone.setAttribute('class', 'print-svg');
-            svgClone.style.width = '100%';
-            svgClone.style.height = '100%';
-            svgClone.setAttribute('viewBox', '0 0 900 650');
-            const printContainer = document.getElementById('print-svg-container');
-            printContainer.innerHTML = '';
-            printContainer.appendChild(svgClone);
-
-            window.print();
-        }
-
-        async function shareWhatsAppImage() {
-            const currentTab = appData.tabs[appData.activeTab];
-            const svgEl = document.getElementById('track-svg');
-            const serializer = new XMLSerializer();
-            let svgString = serializer.serializeToString(svgEl);
-
-            if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
-                svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-            }
-
-            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-
-            const img = new Image();
-            img.onload = function () {
-                const width = 1080;
-                const rowHeight = 36;
-                const headerHeight = 125;
-                const tableHeaderHeight = 42;
-                const tableHeight = tableHeaderHeight + (appData.judges.length * rowHeight);
-                const svgTargetWidth = 1000;
-                const svgTargetHeight = Math.round(svgTargetWidth * (650 / 900));
-                const padding = 40;
-                const totalHeight = headerHeight + tableHeight + 35 + svgTargetHeight + padding;
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = totalHeight;
-                const ctx = canvas.getContext('2d');
-
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, width, totalHeight);
-
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 26px Inter, Arial, sans-serif';
-                ctx.fillText('Planilla de Posiciones de Jueces - Patinaje de Velocidad', padding, 55);
-
-                ctx.fillStyle = '#2563eb';
-                ctx.font = 'bold 22px Inter, Arial, sans-serif';
-                ctx.fillText(`Carrera: ${currentTab.name}`, padding, 92);
-
-                ctx.strokeStyle = '#0f172a';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(padding, 110);
-                ctx.lineTo(width - padding, 110);
-                ctx.stroke();
-
-                const tableX = padding;
-                let currentY = headerHeight;
-                const col1W = 280;
-                const col2W = 440;
-                const tableW = col1W + col2W;
-
-                ctx.fillStyle = '#e2e8f0';
-                ctx.fillRect(tableX, currentY, tableW, tableHeaderHeight);
-                ctx.strokeStyle = '#334155';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(tableX, currentY, col1W, tableHeaderHeight);
-                ctx.strokeRect(tableX + col1W, currentY, col2W, tableHeaderHeight);
-
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 17px Inter, Arial, sans-serif';
-                ctx.fillText('JUEZ OFICIAL', tableX + 14, currentY + 27);
-                ctx.fillText('POSICIÓN ASIGNADA', tableX + col1W + 14, currentY + 27);
-
-                currentY += tableHeaderHeight;
-
-                appData.judges.forEach((j, idx) => {
-                    const pos = (currentTab.assignments && currentTab.assignments[j.id]) || 'Sin Asignar / Disponible';
-                    if (idx % 2 === 1) {
-                        ctx.fillStyle = '#f8fafc';
-                        ctx.fillRect(tableX, currentY, tableW, rowHeight);
-                    }
-                    ctx.strokeStyle = '#64748b';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(tableX, currentY, col1W, rowHeight);
-                    ctx.strokeRect(tableX + col1W, currentY, col2W, rowHeight);
-
-                    ctx.fillStyle = '#0f172a';
-                    ctx.font = 'bold 17px Inter, Arial, sans-serif';
-                    ctx.fillText(j.name, tableX + 14, currentY + 24);
-
-                    ctx.fillStyle = currentTab.assignments && currentTab.assignments[j.id] ? '#065f46' : '#64748b';
-                    ctx.font = currentTab.assignments && currentTab.assignments[j.id] ? '600 17px Inter, Arial, sans-serif' : 'italic 16px Inter, Arial, sans-serif';
-                    ctx.fillText(pos, tableX + col1W + 14, currentY + 24);
-
-                    currentY += rowHeight;
-                });
-
-                currentY += 25;
-                ctx.drawImage(img, padding, currentY, svgTargetWidth, svgTargetHeight);
-                URL.revokeObjectURL(url);
-
-                canvas.toBlob((blob) => {
-                    if (!blob) return;
-                    currentWaBlob = blob;
-                    const safeRaceName = currentTab.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-                    currentWaFileName = `Posiciones_Jueces_${safeRaceName}.png`;
-
-                    const imgUrl = URL.createObjectURL(blob);
-                    document.getElementById('wa-preview-img').src = imgUrl;
-                    const dlLink = document.getElementById('wa-download-link');
-                    dlLink.href = imgUrl;
-                    dlLink.download = currentWaFileName;
-
-                    const shareBtn = document.getElementById('wa-native-share-btn');
-                    try {
-                        const testFile = new File([blob], currentWaFileName, { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [testFile] })) {
-                            shareBtn.classList.remove('hidden');
-                        } else {
-                            shareBtn.classList.add('hidden');
-                        }
-                    } catch (_) {
-                        shareBtn.classList.add('hidden');
-                    }
-
-                    document.getElementById('wa-preview-modal').classList.remove('hidden');
-                }, 'image/png');
-            };
-            img.onerror = () => {
-                URL.revokeObjectURL(url);
-                showToast('No se pudo renderizar la imagen.', 'error');
-            };
-            img.src = url;
-        }
-
-        function closeWaModal() {
-            document.getElementById('wa-preview-modal').classList.add('hidden');
-        }
-
-        async function triggerNativeShare() {
-            if (!currentWaBlob) return;
-            const file = new File([currentWaBlob], currentWaFileName, { type: 'image/png' });
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'Planilla de Posiciones de Jueces - Patinaje de Velocidad',
-                    text: `Posiciones de jueces - ${appData.tabs[appData.activeTab].name}`
-                });
-            } catch (err) {
-                console.log('Share dismissed or unavailable:', err);
-            }
-        }
-
-
-        const COLLAB_USES_KEY = 'patinodromo_velocidad_uso_count';
+                    <!-- Fila inferior: Recta Principal (Meta / Zona de Cambio / Boxes) -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 mt-3">
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-cyan-500/35 p-2.5" data-zone="recta_principal_1">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">Recta Principal — Salida Curva 1</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Pista</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="recta_principal_1"></div>
+                        </div>
+
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-cyan-500/35 p-2.5" data-zone="recta_principal_meta">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">Recta Principal — Línea de Meta</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Principal</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="recta_principal_meta"></div>
+                        </div>
+
+                        <div class="md:col-span-4 judge-zone dm-card rounded-2xl bg-slate-900/90 border border-cyan-500/35 p-2.5" data-zone="zona_boxes_relevos">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">Zona de Relevos / Boxes</span>
+                                <span class="dm-muted text-[10px] text-slate-400">Control</span>
+                            </div>
+                            <div class="judge-slot rounded-xl bg-slate-950/60 border border-slate-800/90 p-1.5 flex flex-wrap gap-1.5" data-slot="zona_boxes_relevos"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Columna derecha: Disponibles y Resumen Operativo (4 columnas en XL) -->
+        <aside class="xl:col-span-4 space-y-4">
+
+            <!-- Panel de Jueces Disponibles -->
+            <div class="dm-card no-print bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h2 class="dm-title font-bold text-sm uppercase tracking-wider">Jueces Disponibles</h2>
+                        <p class="dm-muted text-xs text-slate-400">Tocá un juez para seleccionarlo y luego tocá un puesto</p>
+                    </div>
+                    <span id="available-count-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">0 libres</span>
+                </div>
+
+                <!-- Selección rápida por clic para móvil / tablet -->
+                <div id="selected-judge-banner" class="hidden mb-3 px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-400/40 flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-crosshairs text-sky-400"></i>
+                        <span>Seleccionado: <strong id="selected-judge-name" class="dm-title text-white"></strong></span>
+                    </div>
+                    <button type="button" onclick="clearSelectedJudge()" class="text-sky-300 hover:underline font-semibold">Cancelar</button>
+                </div>
+
+                <!-- Agregar juez rápido -->
+                <form onsubmit="addQuickJudge(event)" class="flex gap-2 mb-3">
+                    <input type="text" id="quick-judge-name" placeholder="Nombre del juez / oficial..."
+                        class="dm-input flex-1 text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500">
+                    <select id="quick-judge-role" class="dm-input text-xs bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="Pista">Pista</option>
+                        <option value="Llegada">Llegada</option>
+                        <option value="Crono">Crono</option>
+                        <option value="Largada">Largada</option>
+                    </select>
+                    <button type="submit" class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shrink-0">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+
+                <!-- Lista de jueces sin asignar -->
+                <div id="unassigned-pool" class="judge-slot dm-panel min-h-[96px] rounded-xl bg-slate-950/60 border border-dashed border-slate-700/90 p-2.5 flex flex-wrap gap-2 content-start" data-slot="unassigned">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Resumen de Posiciones Asignadas -->
+            <div class="summary-card dm-card bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+                    <div>
+                        <h2 class="dm-title font-bold text-sm uppercase tracking-wider">Resumen de Posiciones</h2>
+                        <p class="dm-muted text-xs text-slate-400"><span id="assigned-total-count">0</span> jueces asignados en pista</p>
+                    </div>
+                    <button type="button" onclick="copyPlainSummary()" class="no-print dm-btn-secondary text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold transition">
+                        <i class="fa-regular fa-copy mr-1"></i>Texto
+                    </button>
+                </div>
+
+                <div id="summary-list" class="space-y-2 text-xs max-h-[420px] overflow-y-auto pr-1">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Modal: Administrador de Jueces -->
+    <div id="judge-manager-modal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="dm-modal bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="dm-divider flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-users-gear text-sky-400 text-lg"></i>
+                    <h3 class="dm-title font-bold text-lg">Plantel de Jueces</h3>
+                </div>
+                <button type="button" onclick="closeJudgeManager()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <form onsubmit="addJudgeFromModal(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <input type="text" id="modal-judge-name" placeholder="Apellido y Nombre" required
+                    class="dm-input sm:col-span-6 text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-sky-500">
+                <select id="modal-judge-role" class="dm-input sm:col-span-4 text-xs bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white focus:outline-none focus:border-sky-500">
+                    <option value="Pista">Juez de Pista</option>
+                    <option value="Llegada">Juez de Llegada</option>
+                    <option value="Crono">Cronometrista</option>
+                    <option value="Largada">Juez de Largada</option>
+                </select>
+                <button type="submit" class="sm:col-span-2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition">
+                    Agregar
+                </button>
+            </form>
+
+            <div id="modal-judge-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <div class="dm-divider flex justify-between items-center pt-3 border-t border-slate-800">
+                <button type="button" onclick="restoreDefaultJudges()" class="text-xs text-amber-400 hover:underline font-semibold">
+                    Restaurar lista base
+                </button>
+                <button type="button" onclick="closeJudgeManager()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
+                    Listo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de Toasts -->
+    <div id="toast-container" class="no-print fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        // =========================================================
+        // CONFIGURACIÓN Y ESTADO
+        // =========================================================
+        const STORAGE_KEY = 'patinodromo_velocidad_v8_data';
+        const THEME_STORAGE_KEY = 'patinodromo_velocidad_theme_mode';
+        const USAGE_COUNT_KEY = 'patinodromo_velocidad_uso_count';
         const COLLAB_DONE_KEY = 'patinodromo_velocidad_ya_colaboro';
-        const NOTICE_SEEN_KEY = 'patinodromo_velocidad_aviso_visto';
-        const REMOTE_NOTICE_URL = './aviso-posiciones-jueces.json';
+        const REMOTE_NOTICE_DISMISSED_KEY = 'patinodromo_velocidad_aviso_visto';
+        const REMOTE_NOTICE_URL = 'https://taoflex.github.io/aviso-posiciones-jueces.json/aviso-posiciones-jueces.json';
 
-        function hasCollaborated() {
-            try {
-                return localStorage.getItem(COLLAB_DONE_KEY) === 'true';
-            } catch (_) {
-                return false;
+        const SLOTS = {
+            recta_opuesta_1: { label: 'Recta Opuesta — Ingreso Curva 2', group: 'Recta Opuesta' },
+            recta_opuesta_centro: { label: 'Recta Opuesta — Centro', group: 'Recta Opuesta' },
+            recta_opuesta_2: { label: 'Recta Opuesta — Salida Curva 1', group: 'Recta Opuesta' },
+            curva_1_entrada: { label: 'Curva 1 — Entrada', group: 'Curva 1' },
+            curva_1_vertices: { label: 'Curva 1 — Vértice / Cuerda C1', group: 'Curva 1' },
+            curva_1_salida: { label: 'Curva 1 — Salida', group: 'Curva 1' },
+            cuerda_centro: { label: 'Cuerda / Interior de Pista', group: 'Interior y Salidas' },
+            largada: { label: 'Jueces de Largada / Salida', group: 'Interior y Salidas' },
+            llegada_meta: { label: 'Jueces de Llegada (Meta)', group: 'Llegada y Cronometraje' },
+            cronometraje_vueltas: { label: 'Cronometraje / Vueltas', group: 'Llegada y Cronometraje' },
+            curva_2_entrada: { label: 'Curva 2 — Entrada', group: 'Curva 2' },
+            curva_2_vertices: { label: 'Curva 2 — Vértice / Cuerda C2', group: 'Curva 2' },
+            curva_2_salida: { label: 'Curva 2 — Salida', group: 'Curva 2' },
+            recta_principal_1: { label: 'Recta Principal — Salida Curva 1', group: 'Recta Principal' },
+            recta_principal_meta: { label: 'Recta Principal — Línea de Meta', group: 'Recta Principal' },
+            zona_boxes_relevos: { label: 'Zona de Relevos / Boxes', group: 'Recta Principal' }
+        };
+
+        const DEFAULT_JUDGES = [
+            { id: 'j1', name: 'Juez Pista 1', role: 'Pista' },
+            { id: 'j2', name: 'Juez Pista 2', role: 'Pista' },
+            { id: 'j3', name: 'Juez Pista 3', role: 'Pista' },
+            { id: 'j4', name: 'Juez Pista 4', role: 'Pista' },
+            { id: 'j5', name: 'Juez Llegada 1', role: 'Llegada' },
+            { id: 'j6', name: 'Juez Llegada 2', role: 'Llegada' },
+            { id: 'j7', name: 'Cronometrista 1', role: 'Crono' },
+            { id: 'j8', name: 'Juez Largada 1', role: 'Largada' }
+        ];
+
+        let state = {
+            eventName: '',
+            shift: 'Tarde',
+            jefeJueces: '',
+            judges: [],
+            assignments: {} // { [judgeId]: slotKey }
+        };
+
+        let selectedJudgeId = null;
+        let draggedJudgeId = null;
+        let currentRemoteNotice = null;
+
+        // =========================================================
+        // INICIALIZACIÓN
+        // =========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadState();
+            bindInputs();
+            bindDropTargets();
+            renderAll();
+            trackUsageAndMaybePromptCollab();
+            checkRemoteNotice();
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            applyTheme(savedTheme === 'day');
+        }
+
+        function toggleDayMode() {
+            const isDay = !document.body.classList.contains('day-mode');
+            applyTheme(isDay);
+            localStorage.setItem(THEME_STORAGE_KEY, isDay ? 'day' : 'night');
+        }
+
+        function applyTheme(isDay) {
+            document.body.classList.toggle('day-mode', isDay);
+            const icon = document.getElementById('day-mode-icon');
+            const label = document.getElementById('day-mode-label');
+            if (icon) {
+                icon.className = isDay ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+            if (label) {
+                label.textContent = isDay ? 'Modo Noche' : 'Modo Día';
             }
         }
 
-        function markAsCollaborated() {
+        function loadState() {
             try {
-                localStorage.setItem(COLLAB_DONE_KEY, 'true');
-            } catch (_) {}
-            closeCollabModal();
-            showToast('¡Gracias por tu colaboración!');
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state.eventName = parsed.eventName || '';
+                    state.shift = parsed.shift || 'Tarde';
+                    state.jefeJueces = parsed.jefeJueces || '';
+                    state.judges = Array.isArray(parsed.judges) && parsed.judges.length ? parsed.judges : [...DEFAULT_JUDGES];
+                    state.assignments = parsed.assignments && typeof parsed.assignments === 'object' ? parsed.assignments : {};
+                } else {
+                    state.judges = [...DEFAULT_JUDGES];
+                    state.assignments = {};
+                }
+            } catch (e) {
+                state.judges = [...DEFAULT_JUDGES];
+                state.assignments = {};
+            }
+
+            document.getElementById('event-name').value = state.eventName;
+            document.getElementById('session-shift').value = state.shift;
+            document.getElementById('jefe-jueces').value = state.jefeJueces;
+        }
+
+        function saveState() {
+            state.eventName = document.getElementById('event-name').value.trim();
+            state.shift = document.getElementById('session-shift').value;
+            state.jefeJueces = document.getElementById('jefe-jueces').value.trim();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                // Ignorar errores de cuota
+            }
+            updatePrintHeader();
+        }
+
+        function bindInputs() {
+            ['event-name', 'jefe-jueces'].forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('input', () => {
+                    saveState();
+                });
+            });
+        }
+
+        // =========================================================
+        // ARRASTRAR Y SOLTAR + SELECCIÓN POR CLIC
+        // =========================================================
+        function bindDropTargets() {
+            document.querySelectorAll('[data-slot]').forEach(container => {
+                container.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    container.classList.add('drop-target-active');
+                });
+                container.addEventListener('dragleave', () => {
+                    container.classList.remove('drop-target-active');
+                });
+                container.addEventListener('drop', e => {
+                    e.preventDefault();
+                    container.classList.remove('drop-target-active');
+                    const targetSlot = container.getAttribute('data-slot');
+                    if (draggedJudgeId) {
+                        assignJudgeToSlot(draggedJudgeId, targetSlot);
+                        draggedJudgeId = null;
+                    }
+                });
+
+                // Asignación rápida al tocar un puesto si hay un juez seleccionado
+                container.addEventListener('click', e => {
+                    if (e.target.closest('.judge-chip')) return;
+                    if (!selectedJudgeId) return;
+                    const targetSlot = container.getAttribute('data-slot');
+                    assignJudgeToSlot(selectedJudgeId, targetSlot);
+                    clearSelectedJudge();
+                });
+            });
+        }
+
+        function selectJudge(judgeId) {
+            if (selectedJudgeId === judgeId) {
+                clearSelectedJudge();
+                return;
+            }
+            selectedJudgeId = judgeId;
+            const judge = state.judges.find(j => j.id === judgeId);
+            const banner = document.getElementById('selected-judge-banner');
+            const nameEl = document.getElementById('selected-judge-name');
+            if (judge && banner && nameEl) {
+                nameEl.textContent = judge.name;
+                banner.classList.remove('hidden');
+            }
+        }
+
+        function clearSelectedJudge() {
+            selectedJudgeId = null;
+            const banner = document.getElementById('selected-judge-banner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        function assignJudgeToSlot(judgeId, slotKey) {
+            if (!state.judges.some(j => j.id === judgeId)) return;
+            if (slotKey === 'unassigned') {
+                delete state.assignments[judgeId];
+            } else if (SLOTS[slotKey]) {
+                state.assignments[judgeId] = slotKey;
+            }
+            saveState();
+            renderAll();
+        }
+
+        function clearAllAssignments() {
+            state.assignments = {};
+            clearSelectedJudge();
+            saveState();
+            renderAll();
+            showToast('Pista limpia: todos los jueces volvieron a disponibles');
+        }
+
+        // =========================================================
+        // RENDERIZADO
+        // =========================================================
+        function renderAll() {
+            renderSlots();
+            renderSummary();
+            updateCounts();
+            updatePrintHeader();
+        }
+
+        function getRoleStyle(role) {
+            switch (role) {
+                case 'Llegada':
+                    return {
+                        chip: 'chip-emerald bg-emerald-950/80 border-emerald-500/50 text-emerald-200',
+                        roleText: 'chip-role text-emerald-400'
+                    };
+                case 'Crono':
+                    return {
+                        chip: 'chip-purple bg-purple-950/80 border-purple-500/50 text-purple-200',
+                        roleText: 'chip-role text-purple-400'
+                    };
+                case 'Largada':
+                    return {
+                        chip: 'chip-sky bg-sky-950/80 border-sky-500/50 text-sky-200',
+                        roleText: 'chip-role text-sky-400'
+                    };
+                default:
+                    return {
+                        chip: 'chip-amber bg-amber-950/80 border-amber-500/50 text-amber-200',
+                        roleText: 'chip-role text-amber-400'
+                    };
+            }
+        }
+
+        function createJudgeChip(judge, isAssigned) {
+            const style = getRoleStyle(judge.role);
+            const chip = document.createElement('div');
+            chip.className = `judge-chip ${style.chip} border rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-sm`;
+            chip.draggable = true;
+            chip.dataset.judgeId = judge.id;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = judge.name;
+
+            const roleSpan = document.createElement('span');
+            roleSpan.className = `${style.roleText} text-[10px] font-semibold opacity-90`;
+            roleSpan.textContent = `· ${judge.role}`;
+
+            chip.appendChild(nameSpan);
+            chip.appendChild(roleSpan);
+
+            if (isAssigned) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'no-print ml-1 opacity-75 hover:opacity-100 focus:outline-none';
+                removeBtn.title = 'Quitar del puesto';
+                removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[11px]"></i>';
+                removeBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    assignJudgeToSlot(judge.id, 'unassigned');
+                });
+                chip.appendChild(removeBtn);
+            }
+
+            chip.addEventListener('dragstart', e => {
+                draggedJudgeId = judge.id;
+                chip.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', judge.id);
+            });
+
+            chip.addEventListener('dragend', () => {
+                chip.classList.remove('dragging');
+                draggedJudgeId = null;
+            });
+
+            chip.addEventListener('click', e => {
+                e.stopPropagation();
+                selectJudge(judge.id);
+            });
+
+            return chip;
+        }
+
+        function renderSlots() {
+            // Limpiar todos los contenedores
+            const unassignedPool = document.getElementById('unassigned-pool');
+            unassignedPool.innerHTML = '';
+
+            document.querySelectorAll('.judge-slot').forEach(slotEl => {
+                const key = slotEl.getAttribute('data-slot');
+                if (key === 'unassigned') return;
+                const inner = slotEl.querySelector('.slot-items');
+                if (inner) {
+                    inner.innerHTML = '';
+                } else {
+                    slotEl.innerHTML = '';
+                }
+            });
+
+            // Distribuir jueces según asignación
+            state.judges.forEach(judge => {
+                const assignedSlot = state.assignments[judge.id];
+                if (assignedSlot && SLOTS[assignedSlot]) {
+                    const slotContainer = document.querySelector(`[data-slot="${assignedSlot}"]`);
+                    if (slotContainer) {
+                        const target = slotContainer.querySelector('.slot-items') || slotContainer;
+                        target.appendChild(createJudgeChip(judge, true));
+                    } else {
+                        unassignedPool.appendChild(createJudgeChip(judge, false));
+                    }
+                } else {
+                    unassignedPool.appendChild(createJudgeChip(judge, false));
+                }
+            });
+
+            if (unassignedPool.children.length === 0) {
+                const emptyHint = document.createElement('p');
+                emptyHint.className = 'dm-muted text-xs text-slate-500 italic py-2 px-1';
+                emptyHint.textContent = 'Todos los jueces están asignados en pista.';
+                unassignedPool.appendChild(emptyHint);
+            }
+        }
+
+        function renderSummary() {
+            const listEl = document.getElementById('summary-list');
+            listEl.innerHTML = '';
+
+            const bySlot = {};
+            Object.keys(SLOTS).forEach(k => { bySlot[k] = []; });
+
+            state.judges.forEach(judge => {
+                const s = state.assignments[judge.id];
+                if (s && bySlot[s]) {
+                    bySlot[s].push(judge);
+                }
+            });
+
+            let hasAny = false;
+            Object.entries(SLOTS).forEach(([key, meta]) => {
+                const judgesInSlot = bySlot[key];
+                if (!judgesInSlot || judgesInSlot.length === 0) return;
+                hasAny = true;
+
+                const row = document.createElement('div');
+                row.className = 'dm-panel rounded-xl bg-slate-950/60 border border-slate-800/90 px-3 py-2 flex items-start justify-between gap-2';
+
+                const left = document.createElement('div');
+                const title = document.createElement('div');
+                title.className = 'dm-title font-bold text-slate-200';
+                title.textContent = meta.label;
+
+                const names = document.createElement('div');
+                names.className = 'dm-muted text-slate-400 mt-0.5';
+                names.textContent = judgesInSlot.map(j => `${j.name} (${j.role})`).join(', ');
+
+                left.appendChild(title);
+                left.appendChild(names);
+
+                const badge = document.createElement('span');
+                badge.className = 'px-2 py-0.5 rounded-md bg-slate-800 text-sky-400 font-bold text-[11px] shrink-0';
+                badge.textContent = judgesInSlot.length;
+
+                row.appendChild(left);
+                row.appendChild(badge);
+                listEl.appendChild(row);
+            });
+
+            if (!hasAny) {
+                const p = document.createElement('p');
+                p.className = 'dm-muted text-slate-500 italic py-3 text-center';
+                p.textContent = 'Aún no hay jueces asignados en la pista.';
+                listEl.appendChild(p);
+            }
+        }
+
+        function updateCounts() {
+            const total = state.judges.length;
+            const assigned = state.judges.filter(j => Boolean(state.assignments[j.id] && SLOTS[state.assignments[j.id]])).length;
+            const available = total - assigned;
+
+            const headerCount = document.getElementById('header-judge-count');
+            const availBadge = document.getElementById('available-count-badge');
+            const assignedTotal = document.getElementById('assigned-total-count');
+
+            if (headerCount) headerCount.textContent = String(total);
+            if (availBadge) availBadge.textContent = `${available} ${available === 1 ? 'libre' : 'libres'}`;
+            if (assignedTotal) assignedTotal.textContent = String(assigned);
+        }
+
+        function updatePrintHeader() {
+            const sub = document.getElementById('print-subtitle');
+            const dt = document.getElementById('print-date');
+            const parts = [];
+            if (state.eventName) parts.push(state.eventName);
+            if (state.shift) parts.push(`Turno ${state.shift}`);
+            if (state.jefeJueces) parts.push(`Jefe/a de Jueces: ${state.jefeJueces}`);
+            if (sub) sub.textContent = parts.join('  |  ') || 'Distribución operativa en pista';
+            if (dt) dt.textContent = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // =========================================================
+        // GESTIÓN DE JUECES
+        // =========================================================
+        function addQuickJudge(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('quick-judge-name');
+            const roleSelect = document.getElementById('quick-judge-role');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            state.judges.push({
+                id: 'j_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                name,
+                role: roleSelect.value
+            });
+            nameInput.value = '';
+            saveState();
+            renderAll();
+            showToast(`Se agregó a ${name}`);
+        }
+
+        function addJudgeFromModal(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('modal-judge-name');
+            const roleSelect = document.getElementById('modal-judge-role');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            state.judges.push({
+                id: 'j_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                name,
+                role: roleSelect.value
+            });
+            nameInput.value = '';
+            saveState();
+            renderAll();
+            renderModalJudgeList();
+        }
+
+        function removeJudge(judgeId) {
+            state.judges = state.judges.filter(j => j.id !== judgeId);
+            delete state.assignments[judgeId];
+            if (selectedJudgeId === judgeId) clearSelectedJudge();
+            saveState();
+            renderAll();
+            renderModalJudgeList();
+        }
+
+        function restoreDefaultJudges() {
+            state.judges = [...DEFAULT_JUDGES];
+            state.assignments = {};
+            clearSelectedJudge();
+            saveState();
+            renderAll();
+            renderModalJudgeList();
+            showToast('Lista base restaurada');
+        }
+
+        function openJudgeManager() {
+            renderModalJudgeList();
+            const modal = document.getElementById('judge-manager-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function closeJudgeManager() {
+            const modal = document.getElementById('judge-manager-modal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+        }
+
+        function renderModalJudgeList() {
+            const container = document.getElementById('modal-judge-list');
+            container.innerHTML = '';
+
+            state.judges.forEach(judge => {
+                const row = document.createElement('div');
+                row.className = 'dm-panel flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700/70 text-xs';
+
+                const info = document.createElement('div');
+                info.innerHTML = `<strong class="dm-title">${escapeHtml(judge.name)}</strong> <span class="dm-muted text-slate-400">(${escapeHtml(judge.role)})</span>`;
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'text-rose-400 hover:text-rose-300 px-2 py-1';
+                delBtn.title = 'Eliminar juez';
+                delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                delBtn.addEventListener('click', () => removeJudge(judge.id));
+
+                row.appendChild(info);
+                row.appendChild(delBtn);
+                container.appendChild(row);
+            });
+        }
+
+        // =========================================================
+        // RESUMEN Y COPIADO
+        // =========================================================
+        function buildSummaryText() {
+            const lines = [];
+            lines.push('*POSICIONES DE JUECES - PATINAJE DE VELOCIDAD*');
+            if (state.eventName) lines.push(`Torneo/Fecha: ${state.eventName}`);
+            if (state.shift) lines.push(`Turno: ${state.shift}`);
+            if (state.jefeJueces) lines.push(`Jefe/a de Jueces: ${state.jefeJueces}`);
+            lines.push('');
+
+            const bySlot = {};
+            Object.keys(SLOTS).forEach(k => { bySlot[k] = []; });
+            state.judges.forEach(j => {
+                const s = state.assignments[j.id];
+                if (s && bySlot[s]) bySlot[s].push(j.name);
+            });
+
+            Object.entries(SLOTS).forEach(([key, meta]) => {
+                if (bySlot[key].length > 0) {
+                    lines.push(`• *${meta.label}:* ${bySlot[key].join(', ')}`);
+                }
+            });
+
+            const libres = state.judges.filter(j => !state.assignments[j.id]).map(j => j.name);
+            if (libres.length > 0) {
+                lines.push('');
+                lines.push(`Sin asignar: ${libres.join(', ')}`);
+            }
+
+            return lines.join('\n');
+        }
+
+        function exportSummaryText() {
+            const text = buildSummaryText();
+            copyToClipboard(text, 'Resumen copiado listo para pegar en WhatsApp');
+        }
+
+        function copyPlainSummary() {
+            const text = buildSummaryText().replace(/\*/g, '');
+            copyToClipboard(text, 'Resumen copiado en texto plano');
+        }
+
+        function copyToClipboard(text, successMsg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => showToast(successMsg)).catch(() => fallbackCopy(text, successMsg));
+            } else {
+                fallbackCopy(text, successMsg);
+            }
+        }
+
+        function fallbackCopy(text, successMsg) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg);
+            } catch (e) {
+                showToast('No se pudo copiar automáticamente');
+            }
+            document.body.removeChild(ta);
+        }
+
+        // =========================================================
+        // COLABORACIÓN CADA 20 USOS
+        // =========================================================
+        function trackUsageAndMaybePromptCollab() {
+            if (localStorage.getItem(COLLAB_DONE_KEY) === 'true') return;
+            const current = parseInt(localStorage.getItem(USAGE_COUNT_KEY) || '0', 10) + 1;
+            localStorage.setItem(USAGE_COUNT_KEY, String(current));
+            if (current > 0 && current % 20 === 0) {
+                setTimeout(() => openCollabModal(current), 700);
+            }
         }
 
         function openCollabModal(count) {
             const countEl = document.getElementById('collab-uses-count');
             if (countEl) countEl.textContent = String(count);
             const modal = document.getElementById('collab-modal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            }
         }
 
         function closeCollabModal() {
             const modal = document.getElementById('collab-modal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+            }
         }
 
-        function trackUsageAndCheckCollab() {
-            if (hasCollaborated()) return;
+        function markAsCollaborated() {
+            localStorage.setItem(COLLAB_DONE_KEY, 'true');
+            closeCollabModal();
+            showToast('¡Gracias por apoyar el desarrollo!');
+        }
+
+        // =========================================================
+        // AVISOS REMOTOS (JSON EN GITHUB PAGES)
+        // =========================================================
+        async function checkRemoteNotice() {
             try {
-                const current = parseInt(localStorage.getItem(COLLAB_USES_KEY) || '0', 10) || 0;
-                const next = current + 1;
-                localStorage.setItem(COLLAB_USES_KEY, String(next));
-                if (next > 0 && next % 20 === 0) {
-                    openCollabModal(next);
+                const res = await fetch(`${REMOTE_NOTICE_URL}?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data || !data.activo || !data.mensaje) return;
+
+                const noticeId = String(data.id || data.mensaje).trim();
+                if (localStorage.getItem(REMOTE_NOTICE_DISMISSED_KEY) === noticeId) return;
+
+                currentRemoteNotice = {
+                    id: noticeId,
+                    titulo: data.titulo || 'Aviso Oficial',
+                    mensaje: data.mensaje,
+                    enlace: data.enlace || ''
+                };
+
+                const banner = document.getElementById('remote-notice-banner');
+                const bannerText = document.getElementById('remote-notice-banner-text');
+                if (banner && bannerText) {
+                    bannerText.textContent = `${currentRemoteNotice.titulo}: ${currentRemoteNotice.mensaje}`;
+                    banner.classList.remove('hidden');
                 }
-            } catch (err) {
-                console.error('Collab counter error:', err);
+            } catch (e) {
+                // Sin conexión o JSON no disponible: continuar sin interrumpir
             }
+        }
+
+        function openRemoteNoticeModal() {
+            if (!currentRemoteNotice) return;
+            document.getElementById('remote-notice-title').textContent = currentRemoteNotice.titulo;
+            document.getElementById('remote-notice-body').textContent = currentRemoteNotice.mensaje;
+
+            const linkWrap = document.getElementById('remote-notice-link-wrap');
+            const linkEl = document.getElementById('remote-notice-link');
+            if (currentRemoteNotice.enlace) {
+                linkEl.href = currentRemoteNotice.enlace;
+                linkWrap.classList.remove('hidden');
+            } else {
+                linkWrap.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('remote-notice-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
         }
 
         function closeRemoteNoticeModal() {
             const modal = document.getElementById('remote-notice-modal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        async function checkRemoteNotice() {
-            try {
-                const resp = await fetch(`${REMOTE_NOTICE_URL}?t=${Date.now()}`, { cache: 'no-store' });
-                if (!resp.ok) return;
-                const cfg = await resp.json();
-                if (!cfg || cfg.activo !== true) return;
-
-                if (cfg.ignorarSiYaColaboro === true && hasCollaborated()) {
-                    return;
-                }
-
-                const freq = Math.max(1, parseInt(cfg.frecuenciaUsos, 10) || 1);
-                const uses = parseInt(localStorage.getItem(COLLAB_USES_KEY) || '1', 10) || 1;
-                if (uses % freq !== 0) return;
-
-                const signature = JSON.stringify({
-                    t: cfg.titulo || '',
-                    m: cfg.mensaje || '',
-                    u: cfg.enlaceUrl || '',
-                    f: freq
-                });
-                const seenCountKey = `${NOTICE_SEEN_KEY}_count`;
-                const prevSig = localStorage.getItem(NOTICE_SEEN_KEY);
-                let shownTimes = parseInt(localStorage.getItem(seenCountKey) || '0', 10) || 0;
-                if (prevSig !== signature) {
-                    shownTimes = 0;
-                    localStorage.setItem(NOTICE_SEEN_KEY, signature);
-                }
-                localStorage.setItem(seenCountKey, String(shownTimes + 1));
-
-                const titleEl = document.getElementById('remote-notice-title');
-                const msgEl = document.getElementById('remote-notice-message');
-                const linkWrap = document.getElementById('remote-notice-link-wrap');
-                const linkEl = document.getElementById('remote-notice-link');
-                const linkTextEl = document.getElementById('remote-notice-link-text');
-
-                if (titleEl) titleEl.textContent = cfg.titulo || 'Aviso';
-                if (msgEl) msgEl.textContent = cfg.mensaje || '';
-                if (linkWrap && linkEl && linkTextEl) {
-                    if (cfg.enlaceUrl) {
-                        linkEl.href = cfg.enlaceUrl;
-                        linkTextEl.textContent = cfg.enlaceTexto || 'Abrir enlace';
-                        linkWrap.classList.remove('hidden');
-                    } else {
-                        linkWrap.classList.add('hidden');
-                    }
-                }
-
-                const modal = document.getElementById('remote-notice-modal');
-                if (modal) modal.classList.remove('hidden');
-            } catch (_) {
-                // Silencioso si no hay red o si el JSON aún no está publicado
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
             }
         }
 
-        window.onload = () => {
-            initApp();
-            trackUsageAndCheckCollab();
-            checkRemoteNotice();
-        };
+        function dismissRemoteNoticeBanner() {
+            if (currentRemoteNotice && currentRemoteNotice.id) {
+                localStorage.setItem(REMOTE_NOTICE_DISMISSED_KEY, currentRemoteNotice.id);
+            }
+            const banner = document.getElementById('remote-notice-banner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        // =========================================================
+        // UTILIDADES
+        // =========================================================
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification bg-slate-800 border border-slate-700 text-slate-100 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2600);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
     </script>
 </body>
 </html>
